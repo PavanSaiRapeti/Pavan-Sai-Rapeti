@@ -1,5 +1,6 @@
-node_modules\n.next\nout\n
 node_modules
+.next
+out
 
 # Ignore all .glb files
 *.glb
