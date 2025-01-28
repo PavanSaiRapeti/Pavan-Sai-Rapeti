@@ -1,2 +1,9 @@
 node_modules\n.next\nout\n
 node_modules
+
+# Ignore all .glb files
+*.glb
+
+# If you want to ignore a specific file, use:
+# /path/to/your/model.glb
+/public/models/mainChar.glb
