@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { useDispatch } from 'react-redux';
 import { setCameraRef } from '../../redux/actions/cameraActions';
 
-const CameraRig = () => {
+const CameraRig = ({isDefaultCamera}) => {
   const scroll = useScroll();
   const cameraRef = useRef();
   const dispatch = useDispatch();
@@ -30,7 +30,7 @@ const CameraRig = () => {
   });
 
   return (
-    <PerspectiveCamera ref={cameraRef} makeDefault={true} position={[0, 5, 0]} fov={50} />
+    <PerspectiveCamera ref={cameraRef} makeDefault={isDefaultCamera} position={[0, 5, 0]} fov={50} />
   );
 };
 
