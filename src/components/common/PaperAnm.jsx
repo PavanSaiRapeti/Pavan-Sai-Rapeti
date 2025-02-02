@@ -23,10 +23,16 @@ const PaperAnm = () => {
   });
 
   return (
+   <>
     <mesh ref={paperRef} position={[0, 0, 0]} rotation={[0, 0, 0]}>
-      <planeGeometry args={[0.21, 0.297 ]} />
+      <planeGeometry args={[0.21, 0.297, 32, 32]} /> {/* Increase segments for softbody effect */}
       <meshStandardMaterial map={texture} side={THREE.DoubleSide} /> {/* Apply the texture */}
     </mesh>
+    <mesh>
+      <planeGeometry args={[0.21, 0.297]} />
+      <meshBasicMaterial color="transparent" />
+    </mesh>
+   </>
   );
 };
 

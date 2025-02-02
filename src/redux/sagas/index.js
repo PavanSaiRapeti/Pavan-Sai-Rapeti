@@ -8,6 +8,6 @@ function* handleSetCameraRef(action) {
 }
 
 // Watcher Saga
-export function* watchCameraRef() {
+export default function* watchCameraRef() {
   yield takeEvery(SET_CAMERA_REF, handleSetCameraRef);
 } 

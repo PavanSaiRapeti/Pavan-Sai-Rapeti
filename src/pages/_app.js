@@ -1,29 +1,21 @@
-import { useState, useEffect } from 'react';
-import LoadingScreen from '../components/LoadingScreen';
-import { Provider } from 'react-redux';
-import store from '../redux/store';
+import React, { useEffect } from 'react';
+import { Provider, ReactReduxContext, useDispatch } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react';
 import '../styles/globals.css';
+import LoadingScreen from '../components/LoadingScreen';
+import { persistor, wrapper } from '../redux/store';
 
 function MyApp({ Component, pageProps }) {
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const handleStart = () => setLoading(true);
-    const handleComplete = () => setLoading(false);
-
-    // Simulate loading delay for demonstration
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, []);
 
   return (
-    <Provider store={store}>
-      {loading ? <LoadingScreen /> : <Component {...pageProps} />}
-    </Provider>
+    <ReactReduxContext.Consumer>
+    {({ store }) => (
+      <PersistGate persistor={store.__PERSISTOR} loading={<div>error in gate</div>}>
+        { <Component {...pageProps} />}
+      </PersistGate>
+    )}
+  </ReactReduxContext.Consumer>
   );
 }
 
-export default MyApp;
+export default wrapper.withRedux(MyApp);
