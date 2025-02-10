@@ -1,41 +1,35 @@
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from "@react-three/fiber";
-import { PerspectiveCamera, useHelper, useScroll } from "@react-three/drei";
+import { PerspectiveCamera, useScroll } from "@react-three/drei";
 import * as THREE from "three";
 import { useDispatch, useSelector } from 'react-redux';
-import { setCameraRef, setScroll } from '../../redux/actions/cameraActions';
+import { setCameraRef, setScroll, setScrollBtm } from '../../redux/actions/cameraActions';
 
-const CameraRig = ({isDefaultCamera}) => {
+const CameraRig = ({ isDefaultCamera }) => {
   const scroll = useScroll();
   const cameraRef = useRef();
   const dispatch = useDispatch();
-  const isScroll = useSelector((state) => state.camera.isScroll);
-  console.log(isScroll);
-  // useHelper(cameraRef, THREE.CameraHelper, 1);
+  const {isScroll,isScrollToBtm} = useSelector((state) => state.camera);
 
-  useEffect(() => {
-    dispatch(setCameraRef(cameraRef.current));
-    
-  }, [dispatch]);
+  const targetPosition = new THREE.Vector3();
+  const targetRotation = new THREE.Euler();
+
 
   useFrame(() => {
-    const t = scroll.offset; // Scroll progress (0 to 1)
-    
-    if(t > 0 && !isScroll){
-      console.log('t',t,'isScroll', isScroll);
-      dispatch(setScroll(true));
-    }
-    if(t === 0 && isScroll){
-      dispatch(setScroll(false));
-    }
-    // Interpolating camera position from top-down to front
-    cameraRef.current.position.lerp(
-      new THREE.Vector3(0, 7 - 5 * t, 10 * t), // Moves from (0,5,0) to (0,0,10)
-      0.05
-    );
+    const t = scroll.offset; 
 
-    // Adjusting rotation to look forward
-    cameraRef.current.rotation.x = -Math.PI / 2 + (Math.PI / 2) * t;
+    if ((t > 0 && !isScroll) || (t === 0 && isScroll)) {
+      dispatch(setScroll(t > 0));
+    }
+    if((t>0.95 && !isScrollToBtm ) || (t < 0.98 && isScroll)){
+      dispatch(setScrollBtm(t>0.98));
+    }
+
+    targetPosition.set(0, 7 - 5 * t, 10 * t);
+    targetRotation.set(-Math.PI / 2 + (Math.PI / 2) * t, 0, 0);
+
+    cameraRef.current.position.lerp(targetPosition, 0.05);
+    cameraRef.current.rotation.x = targetRotation.x;
   });
 
   return (
@@ -43,4 +37,4 @@ const CameraRig = ({isDefaultCamera}) => {
   );
 };
 
-export default CameraRig;
+export default CameraRig; 

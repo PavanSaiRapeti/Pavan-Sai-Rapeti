@@ -1,14 +1,21 @@
 // Action Types
 export const SET_CAMERA_REF = 'SET_CAMERA_REF';
-import { SET_SCROLL } from './types';
+export const SET_SCROLL = 'SET_SCROLL';
+export const SET_SCROLL_BTM = 'SET_SCROLL_BTM';
 
 // Action Creators
-export const setCameraRef = (ref) => ({
+export const setCameraRef = (cameraRef) => ({
   type: SET_CAMERA_REF,
-  payload: ref,
+  payload: cameraRef,
 });
 
-export const setScroll = (scrollValue) => ({
+export const setScroll = (isScroll) => ({
   type: SET_SCROLL,
-  payload: scrollValue,
-}); 
+  payload: isScroll,
+});
+
+export const setScrollBtm = (scrollBtmValue) => ({
+  type: SET_SCROLL_BTM,
+  payload: scrollBtmValue,
+});
+

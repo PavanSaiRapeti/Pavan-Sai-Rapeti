@@ -1,38 +1,55 @@
-import React, { useRef, useEffect } from 'react';
-import { useFrame, useLoader } from "@react-three/fiber";
-import { useScroll, useGLTF, useAnimations } from "@react-three/drei";
+import React, { useRef } from 'react';
+import { useSelector } from 'react-redux';
 import * as THREE from "three";
-import { TextureLoader } from 'three';
+import Newspaper from './Newspaper';
+import { useFrame } from '@react-three/fiber';
 
 const PaperAnm = () => {
   const paperRef = useRef();
-  const scroll = useScroll();
-  const texture = useLoader(TextureLoader, '/images/textures/Postertexture.jpg'); // Load the texture
+  const isScrollToBtm = useSelector(state => state.camera.isScrollToBtm);
+
+  // Define the points, speeds, and rotations
+  const points = [
+    { position: new THREE.Vector3(0.4, 1.1, 8.65), speed: 0.3, rotation: new THREE.Euler(4.8, 5.6, 1.6) }, 
+    { position: new THREE.Vector3(0.3, -10.1, 8.5), speed: 0.3, rotation: new THREE.Euler(4.8, 5.6, 1.6) },// tp
+    { position: new THREE.Vector3(0.2, 2.05, 8.65), speed: 0.8, rotation: new THREE.Euler(5.5, 5.6, 0.6) }, // tp1
+    { position: new THREE.Vector3(-0.22, 2.05, 9.65), speed: 0.2, rotation: new THREE.Euler(4.8, 6.6, 1.6) }, // tp2
+  ];
+  let currentPoint = 0;
 
   useFrame(() => {
-    const t = scroll.offset; 
-    const current = paperRef.current;
-     // Scroll progress (0 to 1)
+    if (!paperRef.current) return;
 
-    // Interpolating paper position from floor to screen
-    const targetPosition = new THREE.Vector3(1 * (1 - t), 2 * t, 9.67 * t);
-    current.position.lerp(targetPosition, 0.05);
+    if (isScrollToBtm && currentPoint < points.length) {
+      const target = points[currentPoint];
+      const position = paperRef.current.position;
+      const rotation = paperRef.current.rotation;
+      const speed = target.speed;
 
-    const axis = new THREE.Vector3( 0 , 0, 0).normalize(); 
-    current.rotateOnAxis(axis, 0);
+      // Move towards the target point
+      position.lerp(target.position, speed);
+
+      // Rotate towards the target rotation
+      rotation.x += (target.rotation.x - rotation.x) * speed;
+      rotation.y += (target.rotation.y - rotation.y) * speed;
+      rotation.z += (target.rotation.z - rotation.z) * speed;
+
+      // Check if the object is close to the target point
+      if (position.distanceTo(target.position) < 0.01) {
+        currentPoint += 1; // Move to the next point
+      }
+    } else if (!isScrollToBtm) {
+      // Return to initial position and rotation if not scrolling to bottom
+      paperRef.current.position.lerp(new THREE.Vector3(8, 2.2, 9.1), 0.09);
+      paperRef.current.rotation.set(4.6, 6.6, 1.6);
+      currentPoint = 0; // Reset to start when not scrolling
+    }
   });
 
   return (
-   <>
-    <mesh ref={paperRef} position={[0, 0, 0]} rotation={[0, 0, 0]}>
-      <planeGeometry args={[0.21, 0.297, 32, 32]} /> {/* Increase segments for softbody effect */}
-      <meshStandardMaterial map={texture} side={THREE.DoubleSide} /> {/* Apply the texture */}
+    <mesh ref={paperRef} position={[8, 2.2, 9.1]} rotation={[4.6, 6.6, 1.6]} >
+      <Newspaper />
     </mesh>
-    <mesh>
-      <planeGeometry args={[0.21, 0.297]} />
-      <meshBasicMaterial color="transparent" />
-    </mesh>
-   </>
   );
 };
 

@@ -1,5 +1,4 @@
 import Head from 'next/head';
-import CartoonEnvironment from '../components/three/Scene';
 import Scene from '../components/three/Scene';
 
 export default function Home() {
@@ -10,7 +9,7 @@ export default function Home() {
         <link rel="icon" href="/images/favicon.png" />
       </Head>
       <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%' }}>
-        <Scene/>
+        <Scene />
       </div>
     </div>
   );

@@ -9,11 +9,6 @@ const DummyCamera = ({ isDefaultCamera }) => {
   const cameraRef = useRef();
   const dispatch = useDispatch();
 
-  useEffect(() => {
-    if (isDefaultCamera) {
-      dispatch(setCameraRef(cameraRef.current));
-    }
-  }, [dispatch, isDefaultCamera]);
 
   useFrame(() => {
     if (isDefaultCamera) {
