@@ -21,14 +21,13 @@ export default function Scene() {
     <div className="absolute inset-10 pointer-events-none z-10">
       <Overlay setCamera={setCamera} />
     </div>
-    <Canvas shadows>
+    <Canvas style={{background:'#dcdddf'}} >
       <ScrollControls pages={2}>
         <Room />
         <DummyCamera isDefaultCamera={camera} />
         <CameraRig isDefaultCamera={!camera} />
         <PaperAnm />
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[5, 10, 5]} intensity={0.5} castShadow />
+        <directionalLight position={[5, 10, 5]} intensity={1}  />
         <OrbitControls enableZoom={false} enablePan={false} />
       </ScrollControls>
       

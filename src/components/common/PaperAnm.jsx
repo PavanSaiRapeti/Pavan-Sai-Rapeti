@@ -13,7 +13,7 @@ const PaperAnm = () => {
     { position: new THREE.Vector3(0.4, 1.1, 8.65), speed: 0.3, rotation: new THREE.Euler(4.8, 5.6, 1.6) }, 
     { position: new THREE.Vector3(0.3, -10.1, 8.5), speed: 0.3, rotation: new THREE.Euler(4.8, 5.6, 1.6) },// tp
     { position: new THREE.Vector3(0.2, 2.05, 8.65), speed: 0.8, rotation: new THREE.Euler(5.5, 5.6, 0.6) }, // tp1
-    { position: new THREE.Vector3(-0.22, 2.05, 9.65), speed: 0.2, rotation: new THREE.Euler(4.8, 6.6, 1.6) }, // tp2
+    { position: new THREE.Vector3(-0.1, 2.15, 9.7), speed: 0.2, rotation: new THREE.Euler(4.8, 8, 1.5) }, // tp2
   ];
   let currentPoint = 0;
 
@@ -47,7 +47,7 @@ const PaperAnm = () => {
   });
 
   return (
-    <mesh ref={paperRef} position={[8, 2.2, 9.1]} rotation={[4.6, 6.6, 1.6]} >
+    <mesh ref={paperRef} position={[10, 2.2, 9.1]} rotation={[4.6, 6.6, 1.6]} >
       <Newspaper />
     </mesh>
   );

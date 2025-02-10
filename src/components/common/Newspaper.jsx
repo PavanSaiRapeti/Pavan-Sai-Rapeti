@@ -9,8 +9,8 @@ const Newspaper = () => {
     gravity: new CANNON.Vec3(0, -0.5, 0)
   });
 
-  const Nx = 3;
-  const Ny = 4;
+  const Nx = 2;
+  const Ny = 3;
   const mass = 0.1;
   const dist = 0.1;
   const shape = new CANNON.Particle();

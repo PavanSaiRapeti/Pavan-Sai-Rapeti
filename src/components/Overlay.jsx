@@ -11,9 +11,9 @@ const Overlay = ({setCamera}) => {
       </button>
       <ToggleButton />
     </div>
-    <div style={{ backgroundColor: 'white', width: '80vw', height: '80vh' }}>
+    {/* <div style={{ backgroundColor: 'white', width: '80vw', height: '80vh' }}>
     <GameCanvas /> 
-    </div>
+    </div> */}
     </div>
   );
 };
