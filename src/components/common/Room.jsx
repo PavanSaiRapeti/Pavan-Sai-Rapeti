@@ -80,7 +80,7 @@ const Room = ({ onResumeClick, onDinoModeChange, onHoverNarration }) => {
     "/images/textures/resumeTexture.png",
     "/images/textures/aboutMe.png",
     "/images/textures/worldMap.png",
-    "/images/textures/xMark.png",
+    "/images/textures/xmark.png",
   ]);
   const [resumeTexture, aboutTexture, worldTexture, xMark] = textures;
   const roomText = staticText.room;
