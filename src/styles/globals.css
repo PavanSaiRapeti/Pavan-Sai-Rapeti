@@ -181,12 +181,452 @@ body {
   }
 }
 
+/* === 3D scene insets: tighter below desktop split so the desk isn’t clipped; ≥1100px unchanged === */
+.scene-overlay-safe {
+  inset: clamp(0.45rem, 2vw, 1.85rem);
+}
+
+@media (min-width: 1100px) {
+  .scene-overlay-safe {
+    inset: 2.5rem;
+  }
+}
+
+/* Mobile landscape only (body flags set in useMobilePortraitGate) */
+body[data-mobile-landscape="1"] {
+  --scene-scroll-left: 8px;
+}
+
+body[data-mobile-landscape="1"] .scene-overlay-safe {
+  inset: 0.5rem;
+}
+
+body[data-mobile-landscape="1"] .overlay-panel-safe {
+  width: min(96vw, 100%);
+  height: min(82vh, calc(100dvh - 2.5rem));
+  padding-top: 0.35rem;
+}
+
+body[data-mobile-landscape="1"] .scene-narration-inner {
+  max-width: min(92vw, 22rem);
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-top: 1.25rem;
+  padding-bottom: 1.25rem;
+}
+
+body[data-mobile-landscape="1"] .scene-narration-inner p {
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+/* === Overlay / Konva: full-width main until very wide desktop (keeps phone landscape usable) === */
+.overlay-stack {
+  min-height: 0;
+}
+
+.overlay-main-panel {
+  min-height: 0;
+}
+
+.my-canva-root {
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.my-canva-sidebar {
+  display: none;
+  width: 0;
+}
+
+.my-canva-main-col {
+  width: 100%;
+  min-height: 0;
+  flex: 1;
+}
+
+@media (min-width: 1100px) {
+  .my-canva-root {
+    flex-direction: row;
+  }
+
+  .my-canva-sidebar {
+    display: block;
+    width: 50%;
+  }
+
+  .my-canva-main-col {
+    width: 50%;
+  }
+}
+
+/* MYSELF below desktop split: left “poster” strip (scene shows through) + left-aligned copy */
+@media (max-width: 1099px) {
+  .my-canva-root--myself {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .my-canva-root--myself .my-canva-sidebar {
+    display: block;
+    width: min(30vw, 9.5rem);
+    min-width: 5.5rem;
+    max-width: 10rem;
+    flex-shrink: 0;
+    pointer-events: none;
+    background: transparent;
+  }
+
+  .my-canva-root--myself .my-canva-main-col {
+    flex: 1;
+    min-width: 0;
+    width: auto;
+  }
+
+  .myself-main-col {
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+
+  .myself-main-col .status-display-root {
+    text-align: left;
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .myself-main-col .status-body-block {
+    text-align: left;
+    margin-left: 0;
+    margin-right: 0;
+    max-width: 100%;
+  }
+
+  /* Don’t override body[data-mobile-landscape] overlay sizing */
+  body:not([data-mobile-landscape="1"])
+    .overlay-stack
+    .overlay-panel-safe.overlay-main-panel {
+    width: min(98vw, 100%);
+    height: min(92dvh, calc(100dvh - 2.6rem));
+    padding-top: clamp(0.35rem, 2.5vw, 1.75rem);
+  }
+}
+
+/* === MYSELF tab: responsive role headline === */
+.status-role-heading {
+  font-size: clamp(1.75rem, 6.5vw + 0.35rem, 7rem);
+  max-width: 100%;
+}
+
+body[data-mobile="1"] .status-role-heading {
+  font-size: clamp(1.2rem, 4.8vw + 0.2rem, 3.75rem);
+}
+
+body[data-mobile="1"] .status-availability {
+  font-size: clamp(0.58rem, 2.1vw, 0.7rem) !important;
+}
+
+body[data-mobile="1"] .status-footer-title {
+  font-size: clamp(0.82rem, 3vw, 1.15rem) !important;
+}
+
+body[data-mobile="1"] .status-description {
+  font-size: clamp(0.58rem, 2.1vw, 0.7rem) !important;
+}
+
+body[data-mobile="1"] .status-body-block {
+  padding-top: 0.85rem;
+}
+
+/* Mobile: hide scroll-down hint (3D uses toolbar scroll UI) */
+body[data-mobile="1"] .scroll-blink-hint {
+  display: none !important;
+}
+
+/*
+ * Mobile MYSELF: 50% “poster” (scene) on the left, copy in a 50% column aligned to the right edge.
+ * Overrides narrow strip from @media (max-width: 1099px) when body[data-mobile="1"].
+ */
+body[data-mobile="1"] .my-canva-root--myself {
+  flex-direction: row;
+  align-items: stretch;
+}
+
+body[data-mobile="1"] .my-canva-root--myself .my-canva-sidebar {
+  display: block;
+  flex: 0 0 50%;
+  width: 50%;
+  max-width: 50%;
+  min-width: 0;
+  pointer-events: none;
+  background: transparent;
+}
+
+body[data-mobile="1"] .my-canva-root--myself .my-canva-main-col {
+  flex: 0 0 50%;
+  width: 50%;
+  max-width: 50%;
+  min-width: 0;
+}
+
+body[data-mobile="1"] .myself-main-col {
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding-right: 0.35rem;
+  padding-left: 0.25rem;
+}
+
+body[data-mobile="1"] .myself-main-col .status-display-root {
+  text-align: right;
+  align-items: flex-end;
+  width: 100%;
+  padding-top: 0.15rem;
+  padding-left: 0.1rem;
+  padding-right: 0.1rem;
+}
+
+body[data-mobile="1"] .myself-main-col .status-body-block {
+  text-align: right;
+  margin-left: 0;
+  margin-right: 0;
+  max-width: 100%;
+}
+
+/* MYSELF only: smaller type in the 50% right column (overrides generic mobile .status-* above) */
+body[data-mobile="1"] .my-canva-root--myself .status-availability {
+  padding-top: 0.2rem !important;
+  font-size: clamp(0.45rem, 1.55vw, 0.55rem) !important;
+  line-height: 1.3;
+}
+
+body[data-mobile="1"] .my-canva-root--myself .status-role-heading {
+  margin-top: 0.35rem !important;
+  font-size: clamp(0.82rem, 3.05vw + 0.08rem, 2.2rem) !important;
+  line-height: 1.02;
+}
+
+body[data-mobile="1"] .my-canva-root--myself .status-body-block {
+  padding-top: 0.45rem !important;
+}
+
+body[data-mobile="1"] .my-canva-root--myself .status-footer-title {
+  font-size: clamp(0.58rem, 2vw, 0.78rem) !important;
+  line-height: 1.25;
+}
+
+body[data-mobile="1"] .my-canva-root--myself .status-description {
+  font-size: clamp(0.45rem, 1.45vw, 0.55rem) !important;
+  line-height: 1.33;
+  margin-top: 0.35rem !important;
+}
+
+.status-intro {
+  display: inline;
+}
+
+/* Sprite bubble art sits a bit low / off-center in the frame; anchor icon to visual center */
+.bubble-icon-layer .bubble-skill-icon {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  max-width: 76%;
+  max-height: 76%;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.bubble-playfield {
+  box-sizing: border-box;
+}
+
+/* Bubbles sit above the canvas; keep OS cursor hidden so the fly sprite reads as “the cursor” */
+.scene-overlay-safe .bubble-hitbox {
+  cursor: none !important;
+}
+
+/*
+ * Skills bubble playfield: ResizeObserver must target this node (not the footer wrapper).
+ * Responsive min-height keeps bubbles visible in tight flex layouts; max-width matches art.
+ */
+.bubble-playfield-inner {
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  min-width: 0;
+  position: relative;
+  overflow: hidden;
+  max-width: min(100%, 920px);
+  /* room for float + tooltip without collapsing on mobile */
+  min-height: clamp(10.5rem, 36dvh, 30rem);
+}
+
+@media (min-width: 768px) {
+  .bubble-playfield-inner {
+    min-height: clamp(12rem, 40dvh, 32rem);
+  }
+}
+
+@media (min-width: 1100px) {
+  .bubble-playfield-inner {
+    min-height: clamp(14rem, 42dvh, 34rem);
+  }
+}
+
+/* === Skills bubbles: heading scales on small viewports === */
+.bubble-heading {
+  font-size: clamp(1.75rem, 9vw, 4.5rem);
+}
+
+.bubble-joke {
+  font-size: clamp(0.62rem, 2.4vw, 0.75rem);
+  line-height: 1.35;
+}
+
+/* === Mobile landscape: 3D scroll helper (above scene, below portrait gate) === */
+.mobile-realm-scroll-ui {
+  display: none;
+  position: fixed;
+  bottom: max(0.65rem, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10060;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+  pointer-events: auto;
+}
+
+body[data-mobile-landscape="1"] .mobile-realm-scroll-ui {
+  display: flex;
+}
+
+.mobile-realm-scroll-btn {
+  font-family: system-ui, "Segoe UI", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 0.45rem 0.65rem;
+  border: 3px solid #1e1e24;
+  background: #fffef6;
+  color: #1e1e24;
+  box-shadow: 3px 3px 0 rgba(30, 30, 36, 0.25);
+  border-radius: 2px;
+  white-space: nowrap;
+  touch-action: manipulation;
+}
+
+.mobile-realm-scroll-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 rgba(30, 30, 36, 0.2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-realm-scroll-btn:active {
+    transform: none;
+  }
+}
+
+/* === Mobile portrait: block experience until landscape === */
+.portrait-rotate-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
+    max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  background: linear-gradient(160deg, #1e1e24 0%, #3d3d45 45%, #504b38 100%);
+  color: #fffef6;
+  text-align: center;
+}
+
+.portrait-rotate-card {
+  max-width: 20rem;
+  padding: 1.5rem;
+  border: 4px solid #fbf8ef;
+  background: rgba(30, 30, 36, 0.55);
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.35);
+}
+
+.portrait-rotate-icon {
+  position: relative;
+  width: 4.5rem;
+  height: 4.5rem;
+  margin: 0 auto 1.25rem;
+}
+
+.portrait-rotate-phone {
+  display: block;
+  width: 2.25rem;
+  height: 3.75rem;
+  margin: 0 auto;
+  border: 4px solid #ff9600;
+  border-radius: 10px;
+  background: rgba(251, 248, 239, 0.08);
+}
+
+.portrait-rotate-arrow {
+  position: absolute;
+  right: -0.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 2rem;
+  color: #ff9600;
+  animation: portrait-rotate-spin 2.8s ease-in-out infinite;
+}
+
+@keyframes portrait-rotate-spin {
+  0%,
+  100% {
+    transform: translateY(-50%) rotate(-90deg);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translateY(-50%) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.portrait-rotate-title {
+  margin: 0 0 0.75rem;
+  font-family: logo, system-ui, sans-serif;
+  font-size: 1.45rem;
+  letter-spacing: 0.04em;
+  color: #ff9600;
+  text-shadow: 2px 2px 0 #1e1e24;
+}
+
+.portrait-rotate-body {
+  margin: 0 0 0.65rem;
+  font-size: 0.98rem;
+  line-height: 1.5;
+  color: #fbf8ef;
+}
+
+.portrait-rotate-hint {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  opacity: 0.78;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portrait-rotate-arrow {
+    animation: none;
+    transform: translateY(-50%) rotate(0deg);
+  }
+}
 
 .bubble-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  cursor: pointer;
 }
 
 .bubble {

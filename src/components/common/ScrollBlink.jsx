@@ -25,7 +25,7 @@ const ScrollBlink = () => {
 
     if (!isVisible) return null;
     return (
-        <div style={{
+        <div className="scroll-blink-hint" style={{
             zIndex:'100',
             position: "absolute",
             bottom: "3%",

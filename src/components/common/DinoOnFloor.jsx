@@ -1,5 +1,5 @@
 import { useFrame, useLoader } from "@react-three/fiber";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import {
   drawableDimensions,
@@ -10,6 +10,9 @@ import dinoRunningUrl from "../../assests/dino running.png";
 import dinoDeadUrl from "../../assests/dino dead.png";
 import dinoRoarUrl from "../../assests/dino roar.png";
 import dinoJumpUrl from "../../assests/dino jump.png";
+import trexRoarAudioUrl from "../../assests/audio/trexaudio.mp3";
+
+const trexRoarSrc = trexRoarAudioUrl?.src || trexRoarAudioUrl;
 
 /**
  * Floor dino — edit only this object. Sections are independent (run / dead / roar / jump).
@@ -67,6 +70,11 @@ const DINO_ON_FLOOR_CONFIG = {
     positionY: -0.034,
     positionZ: 2.85,
   },
+  /** World Y added on phones (`body[data-mobile="1"]`) so the dino sits above the bottom safe area */
+  mobile: {
+    yLift: 0.44,
+    zNudge: -1.00,
+  },
   /**
    * Checker key: light grey = `sat` + `lum > minLuminance`. Dark checker tiles need `keyDarkChecker` + RGB spread.
    */
@@ -106,6 +114,27 @@ const DINO_ON_FLOOR_CONFIG = {
     toneMapped: false,
   },
 };
+
+/** Tracks `body[data-mobile]` set by useMobilePortraitGate (SSR-safe). */
+function usePortfolioBodyMobile() {
+  const [mobile, setMobile] = useState(false);
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const read = () => setMobile(document.body?.dataset?.mobile === "1");
+    read();
+    const mo = new MutationObserver(read);
+    mo.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["data-mobile"],
+    });
+    window.addEventListener("resize", read);
+    return () => {
+      mo.disconnect();
+      window.removeEventListener("resize", read);
+    };
+  }, []);
+  return mobile;
+}
 
 const DINO_MOSAIC_STRIPPED = "__dinoMosaicStripped";
 const DINO_STRIP_SIG = "__dinoStripSig";
@@ -190,6 +219,7 @@ function setAtlasFrame(map, frameIndex, atlasStrip) {
 
 export default function DinoOnFloor({ onModeChange }) {
   const cfg = DINO_ON_FLOOR_CONFIG;
+  const isBodyMobile = usePortfolioBodyMobile();
   const prevReportedModeRef = useRef(null);
   const runPath = dinoRunningUrl?.src || dinoRunningUrl;
   const deadPath = dinoDeadUrl?.src || dinoDeadUrl;
@@ -203,6 +233,8 @@ export default function DinoOnFloor({ onModeChange }) {
   ]);
 
   const groupRef = useRef(null);
+  /** Base Y/Z (includes mobile lift); X is driven by walk in useFrame */
+  const dinoBaseYzRef = useRef({ y: 0, z: 0 });
   const materialRef = useRef(null);
   const timeRef = useRef(0);
   const deadTimeRef = useRef(0);
@@ -222,6 +254,20 @@ export default function DinoOnFloor({ onModeChange }) {
   const deadFrames = Math.round(atlasDead.frameCount);
   const roarFrames = Math.round(atlasRoar.frameCount);
   const jumpFrames = Math.round(atlasJump.frameCount);
+
+  const roarAudioRef = useRef(null);
+  /** Browsers block Audio.play() until a user gesture; primed on first pointer/key */
+  const roarAudioUnlockedRef = useRef(false);
+  /** max(sprite strip time, trexaudio.mp3 length) — updated on `loadedmetadata` */
+  const roarDurationSecRef = useRef(
+    roarFrames / cfg.animation.roarFramesPerSecond
+  );
+
+  const { placement, size, material, mobile: mobileAdjust } = cfg;
+  const yLift = isBodyMobile ? mobileAdjust?.yLift ?? 0 : 0;
+  const zNudge = isBodyMobile ? mobileAdjust?.zNudge ?? 0 : 0;
+  dinoBaseYzRef.current.y = placement.positionY + yLift;
+  dinoBaseYzRef.current.z = placement.positionZ + zNudge;
 
   useEffect(() => {
     let cancelled = false;
@@ -276,6 +322,59 @@ export default function DinoOnFloor({ onModeChange }) {
   }, [jumpMap, cfg.backgroundRemovalJump, atlasJump]);
 
   useEffect(() => {
+    const a = new Audio(trexRoarSrc);
+    a.preload = "auto";
+    roarAudioRef.current = a;
+    const vis = roarFrames / cfg.animation.roarFramesPerSecond;
+    const syncDur = () => {
+      const d = a.duration;
+      roarDurationSecRef.current =
+        d && Number.isFinite(d) && !Number.isNaN(d) ? Math.max(vis, d) : vis;
+    };
+    a.addEventListener("loadedmetadata", syncDur);
+    const onErr = () => {
+      roarDurationSecRef.current = vis;
+    };
+    a.addEventListener("error", onErr);
+    return () => {
+      a.removeEventListener("loadedmetadata", syncDur);
+      a.removeEventListener("error", onErr);
+      a.pause();
+      roarAudioRef.current = null;
+    };
+  }, [roarFrames, cfg.animation.roarFramesPerSecond]);
+
+  useEffect(() => {
+    const primeAudio = () => {
+      if (roarAudioUnlockedRef.current) return;
+      const a = roarAudioRef.current;
+      if (!a) return;
+      const prevVol = a.volume;
+      a.volume = 0;
+      const p = a.play();
+      if (p === undefined) {
+        a.volume = prevVol || 1;
+        roarAudioUnlockedRef.current = true;
+        return;
+      }
+      p.then(() => {
+        a.pause();
+        a.currentTime = 0;
+        a.volume = prevVol || 1;
+        roarAudioUnlockedRef.current = true;
+      }).catch(() => {
+        a.volume = prevVol || 1;
+      });
+    };
+    window.addEventListener("pointerdown", primeAudio, true);
+    window.addEventListener("keydown", primeAudio, true);
+    return () => {
+      window.removeEventListener("pointerdown", primeAudio, true);
+      window.removeEventListener("keydown", primeAudio, true);
+    };
+  }, []);
+
+  useEffect(() => {
     const onKeyDown = (e) => {
       if (e.key !== cfg.input.jumpKey) return;
       if (modeRef.current === "dead") return;
@@ -311,6 +410,11 @@ export default function DinoOnFloor({ onModeChange }) {
         walkSecondsUntilRoarRef.current = 0;
         mat.map = roarMap;
         setAtlasFrame(roarMap, 0, atlasRoar);
+        const sfx = roarAudioRef.current;
+        if (sfx) {
+          sfx.currentTime = 0;
+          void sfx.play().catch(() => {});
+        }
         return;
       }
 
@@ -336,16 +440,22 @@ export default function DinoOnFloor({ onModeChange }) {
       roarTimeRef.current += delta;
       const roarFps = cfg.animation.roarFramesPerSecond;
       const elapsedFrames = Math.floor(roarTimeRef.current * roarFps);
-      if (elapsedFrames >= roarFrames) {
+      const frame = Math.min(roarFrames - 1, elapsedFrames);
+      setAtlasFrame(roarMap, frame, atlasRoar);
+      const dur = roarDurationSecRef.current;
+      if (roarTimeRef.current >= dur) {
         modeRef.current = "run";
         roarTimeRef.current = 0;
         walkSecondsUntilRoarRef.current = 0;
         mat.map = runMap;
         setAtlasFrame(runMap, 0, atlasRun);
+        const sfx = roarAudioRef.current;
+        if (sfx) {
+          sfx.pause();
+          sfx.currentTime = 0;
+        }
         return;
       }
-      const frame = Math.min(roarFrames - 1, elapsedFrames);
-      setAtlasFrame(roarMap, frame, atlasRoar);
       return;
     }
 
@@ -395,6 +505,11 @@ export default function DinoOnFloor({ onModeChange }) {
   const handlePointerDown = (event) => {
     event.stopPropagation();
     if (modeRef.current !== "dead") {
+      const sfx = roarAudioRef.current;
+      if (sfx) {
+        sfx.pause();
+        sfx.currentTime = 0;
+      }
       modeRef.current = "dead";
       deadTimeRef.current = 0;
       deadDoneRef.current = false;
@@ -418,24 +533,20 @@ export default function DinoOnFloor({ onModeChange }) {
     }
   };
 
-  const { placement, size, material } = cfg;
-
   return (
     <group
       ref={groupRef}
-      position={[placement.positionX, placement.positionY, placement.positionZ]}
+      position={[
+        placement.positionX,
+        placement.positionY + yLift,
+        placement.positionZ + zNudge,
+      ]}
       scale={[1, 1, 1]}
     >
       <mesh
         rotation={[-Math.PI / 2, 0, 0]}
         scale={[1, -1, 1]}
         onPointerDown={handlePointerDown}
-        onPointerOver={() => {
-          document.body.style.cursor = "pointer";
-        }}
-        onPointerOut={() => {
-          document.body.style.cursor = "auto";
-        }}
       >
         <planeGeometry args={[size.planeWidth, size.planeHeight]} />
         <meshBasicMaterial

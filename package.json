@@ -36,5 +36,9 @@
     "three": "^0.150.1",
     "three-stdlib": "^2.35.13",
     "use-ammojs": "^0.2.21"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^13.5.6"
   }
 }

@@ -1,14 +1,10 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { PerspectiveCamera } from "@react-three/drei/core/PerspectiveCamera";
 import * as THREE from "three";
-import { useDispatch } from 'react-redux';
-import { setCameraRef } from '../../redux/actions/cameraActions';
 
 const DummyCamera = ({ isDefaultCamera }) => {
   const cameraRef = useRef();
-  const dispatch = useDispatch();
-
 
   useFrame(() => {
     if (isDefaultCamera) {

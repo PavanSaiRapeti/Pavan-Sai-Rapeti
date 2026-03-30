@@ -1,10 +1,10 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { PerspectiveCamera } from "@react-three/drei/core/PerspectiveCamera";
 import { useScroll } from "@react-three/drei/web/ScrollControls";
 import * as THREE from "three";
 import { useDispatch, useSelector } from 'react-redux';
-import { setCameraRef, setScroll, setScrollBtm } from '../../redux/actions/cameraActions';
+import { setScroll, setScrollBtm } from "../../redux/actions/cameraActions";
 
 const CameraRig = ({ isDefaultCamera }) => {
   const scroll = useScroll();

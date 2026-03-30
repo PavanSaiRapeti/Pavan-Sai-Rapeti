@@ -11,12 +11,19 @@ import { useSelector } from "react-redux";
 import Overlay from "../reactComponent/Overlay";
 import staticText from "../../content/staticText.json";
 import flyCursorUrl from "../../assests/fly animation.png";
+import kickCursorUrl from "../../assests/kick.jpg";
 import { stripMosaicBackground } from "../../utils/spriteMosaicStrip";
 import AssetLoadBridge from "./AssetLoadBridge";
+import ScrollControlsMobileFix from "./ScrollControlsMobileFix";
+import MobileRealmScrollUI from "../MobileRealmScrollUI";
+import { RealmCursorContext } from "../../context/RealmCursorContext";
 
 const flyCursorSrc = flyCursorUrl?.src || flyCursorUrl;
+const kickCursorSrc = kickCursorUrl?.src || kickCursorUrl;
 
-/** Checker strip for cursor PNG (light + dark grey tiles). */
+const KICK_FRAME_COUNT = 2;
+
+/** Checker strip for fly cursor PNG (light + dark grey tiles). */
 const FLY_CURSOR_STRIP = {
   apply: true,
   maxSaturation: 0.12,
@@ -28,20 +35,33 @@ const FLY_CURSOR_STRIP = {
   maxSaturationDark: 0.1,
 };
 
-/** Hotspot from top-left of the scaled cursor (px) — tune with art. */
+/** Flat near-white background on kick sprite (JPEG). */
+const KICK_CURSOR_STRIP = {
+  apply: true,
+  maxSaturation: 0.24,
+  minLuminance: 0.76,
+  keyDarkChecker: false,
+};
+
 const FLY_CURSOR_HOTSPOT = { x: 14, y: 12 };
 const FLY_CURSOR_HEIGHT_PX = 120;
+const KICK_CURSOR_HEIGHT_PX = 100;
 
 export default function Scene({ onAssetsLoaded }) {
-  const [camera, setCamera] = useState(false);
   const [showResume, setShowResume] = useState(false);
   const [dinoMode, setDinoMode] = useState("run");
   const [cursorInRoom, setCursorInRoom] = useState(false);
   const cursorInRoomRef = useRef(false);
-  const flyCursorImgRef = useRef(null);
+  const flyCursorWrapRef = useRef(null);
   const [hoverNarration, setHoverNarration] = useState(null);
   const [flyCursorDisplaySrc, setFlyCursorDisplaySrc] = useState(flyCursorSrc);
-  const isScroll = useSelector(state => state.camera.isScroll);
+  const [kickPlaying, setKickPlaying] = useState(false);
+  const [kickFrame, setKickFrame] = useState(0);
+  const [kickSpriteRatio, setKickSpriteRatio] = useState(0.5);
+  const [kickDisplaySrc, setKickDisplaySrc] = useState(kickCursorSrc);
+  const kickLockRef = useRef(false);
+  const kickTimersRef = useRef([]);
+  const isScroll = useSelector((state) => state.camera.isScroll);
   const resumeUrl = process.env.NEXT_PUBLIC_RESUME_URL || staticText.room.resumeUrl;
 
   const realmFlagsRef = useRef({ textures: false, fonts: false, cursor: false });
@@ -92,16 +112,105 @@ export default function Scene({ onAssetsLoaded }) {
     };
   }, [flyCursorSrc, pingAssetsLoaded]);
 
-  const moveFlyCursor = useCallback(
-    (clientX, clientY) => {
-      const el = flyCursorImgRef.current;
-      if (!el) return;
-      el.style.transform = `translate(${clientX - FLY_CURSOR_HOTSPOT.x}px, ${clientY - FLY_CURSOR_HOTSPOT.y}px)`;
-    },
-    []
-  );
+  useEffect(() => {
+    let cancelled = false;
+    const img = new Image();
+    img.decoding = "async";
+    img.onload = () => {
+      if (cancelled) return;
+      const fh0 = img.naturalHeight || 1;
+      const fw0 = img.naturalWidth / KICK_FRAME_COUNT;
+      try {
+        const out = stripMosaicBackground(img, KICK_CURSOR_STRIP);
+        setKickDisplaySrc(out.toDataURL("image/png"));
+        const fh = out.height || fh0;
+        const fw = (out.width || img.naturalWidth) / KICK_FRAME_COUNT;
+        setKickSpriteRatio(fw / fh);
+      } catch {
+        setKickDisplaySrc(kickCursorSrc);
+        setKickSpriteRatio(fw0 / fh0);
+      }
+    };
+    img.onerror = () => {
+      if (!cancelled) setKickSpriteRatio(0.5);
+    };
+    img.src = kickCursorSrc;
+    return () => {
+      cancelled = true;
+    };
+  }, [kickCursorSrc]);
+
+  useEffect(() => {
+    return () => {
+      kickTimersRef.current.forEach((id) => window.clearTimeout(id));
+      kickTimersRef.current = [];
+    };
+  }, []);
+
+  const moveFlyCursor = useCallback((clientX, clientY) => {
+    const el = flyCursorWrapRef.current;
+    if (!el) return;
+    el.style.transform = `translate(${clientX - FLY_CURSOR_HOTSPOT.x}px, ${
+      clientY - FLY_CURSOR_HOTSPOT.y
+    }px)`;
+  }, []);
+
+  const playKick = useCallback((opts) => {
+    if (showResume) return;
+    const skipCursorGate = opts?.skipCursorGate === true;
+    if (!skipCursorGate && !cursorInRoomRef.current) return;
+    if (kickLockRef.current) return;
+    kickLockRef.current = true;
+    kickTimersRef.current.forEach((id) => window.clearTimeout(id));
+    kickTimersRef.current = [];
+    const reduced =
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    if (reduced) {
+      setKickPlaying(true);
+      setKickFrame(1);
+      const tEnd = window.setTimeout(() => {
+        setKickPlaying(false);
+        setKickFrame(0);
+        kickLockRef.current = false;
+        kickTimersRef.current = [];
+      }, 130);
+      kickTimersRef.current.push(tEnd);
+      return;
+    }
+    setKickPlaying(true);
+    setKickFrame(0);
+    const tFrame1 = window.setTimeout(() => setKickFrame(1), 95);
+    const tEnd = window.setTimeout(() => {
+      setKickPlaying(false);
+      setKickFrame(0);
+      kickLockRef.current = false;
+      kickTimersRef.current = [];
+    }, 340);
+    kickTimersRef.current.push(tFrame1, tEnd);
+  }, [showResume]);
+
+  /** Skills bubbles sit above the canvas; room surface mouseleave was hiding the fly sprite. Track at window level. */
+  useEffect(() => {
+    if (showResume) {
+      setRoomCursor(false);
+      return;
+    }
+    const onMove = (e) => {
+      if (!cursorInRoomRef.current) setRoomCursor(true);
+      moveFlyCursor(e.clientX, e.clientY);
+    };
+    const onBlur = () => setRoomCursor(false);
+    window.addEventListener("pointermove", onMove, { passive: true });
+    window.addEventListener("blur", onBlur);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("blur", onBlur);
+    };
+  }, [showResume, moveFlyCursor]);
 
   const useFlyCursor = cursorInRoom && !showResume;
+  const roomCursor = useFlyCursor ? "none" : "default";
 
   const setRoomCursor = (active) => {
     cursorInRoomRef.current = active;
@@ -109,117 +218,133 @@ export default function Scene({ onAssetsLoaded }) {
   };
 
   return (
+    <RealmCursorContext.Provider value={{ playKick }}>
     <div className="relative w-screen h-screen overflow-hidden threejs-container">
-    <AssetLoadBridge
-      onTexturesReady={() => {
-        realmFlagsRef.current.textures = true;
-        pingAssetsLoaded();
-      }}
-    />
-    <div className="absolute inset-10 pointer-events-none z-10">
-      <Overlay setCamera={setCamera} />
-    </div>
-    <div
-      className="absolute inset-0 z-0 h-full w-full"
-      onMouseEnter={(e) => {
-        if (showResume) return;
-        setRoomCursor(true);
-        moveFlyCursor(e.clientX, e.clientY);
-      }}
-      onMouseLeave={() => {
-        setRoomCursor(false);
-      }}
-      onMouseMove={(e) => {
-        if (!cursorInRoomRef.current || showResume) return;
-        moveFlyCursor(e.clientX, e.clientY);
-      }}
-      style={{
-        cursor: useFlyCursor ? "none" : "auto",
-      }}
-    >
-    <Canvas
-      dpr={[1, 1.5]}
-      gl={{ antialias: false, powerPreference: "high-performance" }}
-      style={{background:'#FBF8EF', overflow: 'hidden'}}
-      className="threejs-container h-full w-full"
-    >
-      <ScrollControls pages={2}  style={{left:'15px'}}>
-        <Room
-          onResumeClick={() => {
-            setHoverNarration(null);
-            setShowResume(true);
-          }}
-          onDinoModeChange={setDinoMode}
-          onHoverNarration={setHoverNarration}
-        />
-        <DummyCamera isDefaultCamera={camera} />
-        <CameraRig isDefaultCamera={!camera} />
-        <PaperAnm />
-        <directionalLight position={[5, 10, 5]} intensity={1}  />
-        <OrbitControls enableZoom={false} enablePan={false} enableDamping={false} />
-      </ScrollControls>
-      
-    </Canvas>
-    </div>
-    {hoverNarration && !showResume ? (
-      <div
-        className="pointer-events-none fixed inset-0 z-[65] flex items-center justify-center px-6"
-        aria-live="polite"
-      >
-        <div
-          className="max-w-lg border-4 border-[#3d3d45] bg-[#fffef6] px-10 py-8 shadow-[6px_6px_0_#1e1e24] text-center"
-          style={{ fontFamily: "special" }}
-        >
-          <p className="text-lg leading-relaxed text-[#222] md:text-xl">
-            {hoverNarration}
-          </p>
-        </div>
-      </div>
-    ) : null}
-    {useFlyCursor ? (
-      <img
-        ref={flyCursorImgRef}
-        src={flyCursorDisplaySrc}
-        alt=""
-        aria-hidden
-        className="pointer-events-none fixed left-0 top-0 z-[70] select-none"
-        style={{
-          height: FLY_CURSOR_HEIGHT_PX,
-          width: "auto",
-          imageRendering: "pixelated",
+      <AssetLoadBridge
+        onTexturesReady={() => {
+          realmFlagsRef.current.textures = true;
+          pingAssetsLoaded();
         }}
       />
-    ) : null}
-    {!isScroll ? <ScrollBlink /> : ''}
-    {dinoMode === "roar" ? (
+      <div className="absolute scene-overlay-safe pointer-events-none z-10">
+        <Overlay />
+      </div>
       <div
-        className="pointer-events-none absolute bottom-28 left-1/2 z-[25] -translate-x-1/2 text-center text-black"
-        style={{ fontFamily: "special", fontSize: 15 }}
+        className="scene-room-surface absolute inset-0 z-0 h-full w-full min-h-0"
+        onPointerDown={(e) => {
+          if (e.pointerType === "mouse" && e.button !== 0) return;
+          if (showResume) return;
+          if (!cursorInRoomRef.current) return;
+          moveFlyCursor(e.clientX, e.clientY);
+          playKick();
+        }}
+        style={{ cursor: roomCursor }}
       >
-        {staticText.dino?.roarCaption ?? "roarrrrrr..."}
+        <Canvas
+          dpr={[1, 1.5]}
+          gl={{ antialias: false, powerPreference: "high-performance" }}
+          style={{ background: "#FBF8EF", overflow: "hidden", cursor: roomCursor }}
+          className="threejs-container h-full w-full"
+        >
+          <ScrollControls pages={2} style={{ left: "var(--scene-scroll-left, 15px)" }}>
+            <ScrollControlsMobileFix />
+            <Room
+              onResumeClick={() => {
+                setHoverNarration(null);
+                setShowResume(true);
+              }}
+              onDinoModeChange={setDinoMode}
+              onHoverNarration={setHoverNarration}
+            />
+            <DummyCamera isDefaultCamera={false} />
+            <CameraRig isDefaultCamera={true} />
+            <PaperAnm />
+            <directionalLight position={[5, 10, 5]} intensity={1} />
+            <OrbitControls enableZoom={false} enablePan={false} enableDamping={false} />
+          </ScrollControls>
+        </Canvas>
       </div>
-    ) : null}
-    {showResume ? (
-      <div className="absolute inset-0 z-30 bg-black/70 p-4 md:p-8">
-        <div className="h-full w-full rounded-lg bg-white shadow-xl overflow-hidden flex flex-col">
-          <div className="flex items-center justify-between border-b px-4 py-2">
-            <h2 className="text-black text-lg font-semibold">{staticText.room.resumeModalTitle}</h2>
-            <button
-              type="button"
-              className="rounded bg-black px-3 py-1 text-white"
-              onClick={() => setShowResume(false)}
-            >
-              {staticText.room.resumeCloseButton}
-            </button>
+      {hoverNarration && !showResume ? (
+        <div
+          className="pointer-events-none fixed inset-0 z-[65] flex items-center justify-center px-6"
+          aria-live="polite"
+        >
+          <div
+            className="scene-narration-inner max-w-lg border-4 border-[#3d3d45] bg-[#fffef6] px-10 py-8 shadow-[6px_6px_0_#1e1e24] text-center"
+            style={{ fontFamily: "special" }}
+          >
+            <p className="text-lg leading-relaxed text-[#222] md:text-xl">
+              {hoverNarration}
+            </p>
           </div>
-          <iframe
-            title={staticText.room.resumeModalTitle}
-            src={resumeUrl}
-            className="h-full w-full border-0"
-          />
         </div>
-      </div>
-    ) : null}
-  </div>
+      ) : null}
+      {useFlyCursor ? (
+        <div
+          ref={flyCursorWrapRef}
+          className="pointer-events-none fixed left-0 top-0 z-[70] select-none will-change-transform"
+          style={{ transform: "translate(-9999px, -9999px)" }}
+        >
+          {kickPlaying ? (
+            <div
+              aria-hidden
+              style={{
+                height: KICK_CURSOR_HEIGHT_PX,
+                width: KICK_CURSOR_HEIGHT_PX * kickSpriteRatio,
+                backgroundImage: `url(${kickDisplaySrc})`,
+                backgroundRepeat: "no-repeat",
+                backgroundSize: `${KICK_FRAME_COUNT * 100}% 100%`,
+                backgroundPosition: `${(kickFrame / (KICK_FRAME_COUNT - 1)) * 100}% 0`,
+                imageRendering: "pixelated",
+              }}
+            />
+          ) : (
+            <img
+              src={flyCursorDisplaySrc}
+              alt=""
+              aria-hidden
+              style={{
+                height: FLY_CURSOR_HEIGHT_PX,
+                width: "auto",
+                display: "block",
+                imageRendering: "pixelated",
+              }}
+            />
+          )}
+        </div>
+      ) : null}
+      {!isScroll ? <ScrollBlink /> : ""}
+      {dinoMode === "roar" ? (
+        <div
+          className="pointer-events-none absolute bottom-28 left-1/2 z-[25] -translate-x-1/2 text-center text-black"
+          style={{ fontFamily: "special", fontSize: 15 }}
+        >
+          {staticText.dino?.roarCaption ?? "roarrrrrr..."}
+        </div>
+      ) : null}
+      <MobileRealmScrollUI />
+      {showResume ? (
+        <div className="absolute inset-0 z-30 bg-black/70 p-4 md:p-8">
+          <div className="flex h-full w-full flex-col overflow-hidden rounded-lg bg-white shadow-xl">
+            <div className="flex items-center justify-between border-b px-4 py-2">
+              <h2 className="text-lg font-semibold text-black">{staticText.room.resumeModalTitle}</h2>
+              <button
+                type="button"
+                className="rounded bg-black px-3 py-1 text-white"
+                onClick={() => setShowResume(false)}
+              >
+                {staticText.room.resumeCloseButton}
+              </button>
+            </div>
+            <iframe
+              title={staticText.room.resumeModalTitle}
+              src={resumeUrl}
+              className="h-full w-full border-0"
+            />
+          </div>
+        </div>
+      ) : null}
+    </div>
+    </RealmCursorContext.Provider>
   );
 }

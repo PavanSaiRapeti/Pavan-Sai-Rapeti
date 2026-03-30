@@ -2,7 +2,7 @@
 
 import Matter from 'matter-js';
 import React, { useRef, useEffect, useState } from 'react';  
-import { Stage, Layer, Rect } from 'react-konva';  
+import { Stage, Layer, Rect, Circle } from "react-konva";  
 
 const GameCanvas = () => {  
   const [birds, setBirds] = useState([]);
@@ -23,11 +23,11 @@ const GameCanvas = () => {
     Matter.Engine.run(engine.current);
   }, []);
 
-  const handleMouseDown = (e) => {
+  const handleMouseDown = () => {
     setIsDragging(true);
   };
 
-  const handleMouseUp = (e) => {
+  const handleMouseUp = () => {
     if (isDragging) {
       const mousePos = stageRef.current.getPointerPosition();
       const force = {
@@ -42,7 +42,7 @@ const GameCanvas = () => {
     }
   };
 
-  const handleMouseMove = (e) => {
+  const handleMouseMove = () => {
     if (isDragging) {
       const mousePos = stageRef.current.getPointerPosition();
       setBirdPosition({ x: mousePos.x, y: mousePos.y });

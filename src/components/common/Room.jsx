@@ -1,6 +1,6 @@
 import { Text } from "@react-three/drei/core/Text";
 import { useScroll } from "@react-three/drei/web/ScrollControls";
-import { useFrame, useLoader } from "@react-three/fiber";
+import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import React, { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { buildUrl } from "../../../utils/urlBuilder";
@@ -10,6 +10,67 @@ import DinoOnFloor from "./DinoOnFloor";
 
 /** Hover narration only after this scroll fraction (0–1). */
 const NARRATION_MIN_SCROLL = 0.5;
+
+/** Screen-space radius (CSS px) for narration hotspots (e.g. Toronto labels). */
+const NARRATION_HOTSPOT_RADIUS_PX = 30;
+
+/**
+ * Invisible disc whose world radius tracks ~`radiusPx` on screen (perspective or ortho).
+ */
+function NarrationHotspotPx({
+  position,
+  rotation,
+  radiusPx,
+  speechKey,
+  showNarration,
+  hideNarrationSoon,
+  clearNarrationTimer,
+}) {
+  const meshRef = useRef(null);
+  const { camera, size } = useThree();
+
+  useFrame(() => {
+    const mesh = meshRef.current;
+    if (!mesh || !camera) return;
+    const worldPos = new THREE.Vector3();
+    mesh.getWorldPosition(worldPos);
+    let radiusWorld;
+    if (camera.isPerspectiveCamera) {
+      const dist = camera.position.distanceTo(worldPos);
+      const vFov = (camera.fov * Math.PI) / 180;
+      const frustumHeight = 2 * Math.tan(vFov / 2) * dist;
+      const worldPerPixel = frustumHeight / size.height;
+      radiusWorld = radiusPx * worldPerPixel;
+    } else {
+      const frustumHeight = camera.top - camera.bottom;
+      const worldPerPixel = frustumHeight / size.height;
+      radiusWorld = radiusPx * worldPerPixel;
+    }
+    mesh.scale.setScalar(radiusWorld);
+  });
+
+  return (
+    <mesh
+      ref={meshRef}
+      position={position}
+      rotation={rotation}
+      onPointerEnter={(e) => {
+        e.stopPropagation();
+        clearNarrationTimer();
+        showNarration(speechKey);
+      }}
+      onPointerOut={hideNarrationSoon}
+    >
+      <circleGeometry args={[1, 32]} />
+      <meshBasicMaterial
+        transparent
+        opacity={0}
+        depthWrite={false}
+        side={THREE.DoubleSide}
+      />
+    </mesh>
+  );
+}
 
 const Room = ({ onResumeClick, onDinoModeChange, onHoverNarration }) => {
   const scroll = useScroll();
@@ -69,8 +130,22 @@ const Room = ({ onResumeClick, onDinoModeChange, onHoverNarration }) => {
       color: "#504B38",
     },
     { text: roomText.fontLines[6], position: [-2.2, 0.3, 0.1], color: "#504B38" },
-    { text: roomText.fontLines[7], position: [2.1, 0.85, 0.1], color: "#1F2937", key: "livingIn", font: true },
-    { text: roomText.fontLines[8], position: [2.1, 0.7, 0.1], color: "#1F2937", key: "livingIn", font: true },
+    {
+      text: roomText.fontLines[7],
+      position: [2.1, 0.85, 0.1],
+      color: "#1F2937",
+      key: "livingIn",
+      font: true,
+      speechKey: "worldMap",
+    },
+    {
+      text: roomText.fontLines[8],
+      position: [2.1, 0.7, 0.1],
+      color: "#1F2937",
+      key: "livingIn",
+      font: true,
+      speechKey: "worldMap",
+    },
     { text: roomText.fontLines[9], position: [5, 0.15, 0.1], color: "#1F2937", key: "bornIn", font: true },
     { text: roomText.fontLines[10], position: [5 , 0.02, 0.1], color: "#1F2937", key: "bornIn", font: true }
   ], [roomText]);
@@ -160,12 +235,6 @@ const Room = ({ onResumeClick, onDinoModeChange, onHoverNarration }) => {
       <mesh
         position={[3.5, -0.4995, -0.5]}
         rotation={[-Math.PI / 2, 0, 0.1]}
-        onPointerEnter={(e) => {
-          e.stopPropagation();
-          clearNarrationTimer();
-          showNarration("worldMap");
-        }}
-        onPointerOut={hideNarrationSoon}
       >
         <planeGeometry args={[7.5, 4.5]} />
         <meshStandardMaterial
@@ -258,10 +327,26 @@ const Room = ({ onResumeClick, onDinoModeChange, onHoverNarration }) => {
             fontSize={item.font ?  0.12 : 0.17}
             textAlign="center"
             color={item.color}
+            pointerEvents="none"
           >
             {item.text}
           </Text>
         ))}
+        {fontArray
+          .map((item, index) => ({ item, index }))
+          .filter(({ item }) => item.speechKey)
+          .map(({ item, index }) => (
+            <NarrationHotspotPx
+              key={`narr-hotspot-${index}`}
+              position={item.position}
+              rotation={!item.font ? [Math.PI, -Math.PI, Math.PI / 0.32] : [0, 0, 0]}
+              radiusPx={NARRATION_HOTSPOT_RADIUS_PX}
+              speechKey={item.speechKey}
+              showNarration={showNarration}
+              hideNarrationSoon={hideNarrationSoon}
+              clearNarrationTimer={clearNarrationTimer}
+            />
+          ))}
       </mesh>
     </group>
   );
