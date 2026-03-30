@@ -5,7 +5,7 @@ import TypescriptIcon from "./svg/TypescriptIcon";
 import NextJSIcon from "./svg/NextJSIcon";
 import ReduxIcon from "./svg/ReduxIcon";
 import TailwindcssIcon from "./svg/TailwindcssIcon";
-import ExpressJSIcon from "./svg/ExpressJSIcon";
+import ExpressJSIcon from "./svg/ExpressjsIcon";
 import NodejsIcon from "./svg/NodejsIcon";
 import MongoDBIcon from "./svg/MongoDBIcon";
 import BlenderIcon from "./svg/BlenderIcon";
