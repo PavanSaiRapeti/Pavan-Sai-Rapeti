@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from "@react-three/fiber";
-import { PerspectiveCamera, useScroll } from "@react-three/drei";
+import { PerspectiveCamera } from "@react-three/drei/core/PerspectiveCamera";
+import { useScroll } from "@react-three/drei/web/ScrollControls";
 import * as THREE from "three";
 import { useDispatch, useSelector } from 'react-redux';
 import { setCameraRef, setScroll, setScrollBtm } from '../../redux/actions/cameraActions';
@@ -25,15 +26,15 @@ const CameraRig = ({ isDefaultCamera }) => {
       dispatch(setScrollBtm(t>0.98));
     }
 
-    targetPosition.set(0, 7 - 5 * t, 10 * t);
-    targetRotation.set(-Math.PI / 2 + (Math.PI / 2) * t, 0, 0);
+    targetPosition.set(0, 7 - 5 * (1-t), 10 * (1-t));
+    targetRotation.set(-Math.PI / 2 + (Math.PI / 2) * (1-t), 0, 0);
 
     cameraRef.current.position.lerp(targetPosition, 0.05);
     cameraRef.current.rotation.x = targetRotation.x;
   });
 
   return (
-    <PerspectiveCamera ref={cameraRef} makeDefault={isDefaultCamera} position={[0, 5, 0]} fov={50} />
+    <PerspectiveCamera ref={cameraRef} makeDefault={isDefaultCamera} position={[0, 2, 10]} fov={50} />
   );
 };
 

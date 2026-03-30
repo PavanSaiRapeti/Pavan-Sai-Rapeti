@@ -5,8 +5,11 @@ module.exports = {
     extend: {
       fontFamily: {
         'ubuntu': ['Ubuntu', 'sans-serif'],
+        'fontbutton': ['FontButton', 'sans-serif'],
+        'child':['special', 'sans-serif'] ,
+        'logo':['logo', 'sans-serif'] 
       },
-  },
+    },
   plugins: [],
 }
 }

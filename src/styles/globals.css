@@ -3,14 +3,49 @@
 @tailwind utilities;
 
 @font-face {
-  font-family: 'child';
-  src: url('/fonts/child.ttf') format('truetype');
-  font-weight: normal;
+  font-family: 'primary';
+  src: url('/fonts/Logo.ttf') format('opentype');
   font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'secondary';
+  src: url('/fonts/Logo.otf') format('opentype');
+  font-size: 20em;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'special';
+  src: url('/fonts/child.ttf') format('truetype');
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'FontButton';
+  src: url('/fonts/Logo.ttf') format('truetype');
+  font-style: normal;
+  letter-spacing: 1em;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'logo';
+  src: url('/fonts/Logo2.ttf') format('truetype');
+  font-style: normal;
+  letter-spacing: 1em;
+  font-display: swap;
+}
+
+:root {
+    --float-heightX: -10px;
+    --float-heightY: -10px; /* Default float height */
 }
 
 body {
-  font-family: 'child';
+  font-family: 'primary';
+  color: #F96E2A;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -29,3 +64,216 @@ body {
   z-index: 1000;
 }
 
+.realm-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fbf8ef;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.55s ease;
+}
+
+.realm-loading-overlay--visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.realm-loading-overlay__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.75rem;
+  padding: 2rem;
+  max-width: min(90vw, 28rem);
+  text-align: center;
+}
+
+.realm-loading-overlay__gif {
+  max-height: min(38vh, 260px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  image-rendering: auto;
+  filter: drop-shadow(4px 6px 0 rgba(30, 30, 36, 0.12));
+}
+
+.realm-loading-overlay__gif-fallback {
+  width: min(38vw, 160px);
+  height: min(38vw, 160px);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ff9600 0%, #504b38 50%, #1e1e24 100%);
+  animation: realm-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes realm-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.04);
+    opacity: 1;
+  }
+}
+
+.realm-loading-overlay__percent {
+  margin: 0 0 0.25rem;
+  font-family: system-ui, "Segoe UI", sans-serif;
+  font-size: clamp(2rem, 6vw, 3rem);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  color: #ff9600;
+  text-shadow: 2px 2px 0 #1e1e24;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.06em;
+  line-height: 1;
+}
+
+.realm-loading-overlay__percent-value {
+  font-weight: 700;
+}
+
+.realm-loading-overlay__percent-sign {
+  font-size: 0.55em;
+  font-weight: 600;
+  opacity: 0.95;
+}
+
+.realm-loading-overlay__bar-track {
+  width: min(320px, 85vw);
+  height: 8px;
+  border: 3px solid #1e1e24;
+  background: #fffef6;
+  box-shadow: 4px 4px 0 rgba(30, 30, 36, 0.15);
+}
+
+.realm-loading-overlay__bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff9600, #504b38);
+  transition: width 0.08s linear;
+}
+
+.realm-loading-overlay__line {
+  margin: 0.75rem 0 0;
+  font-size: clamp(1.05rem, 2.8vw, 1.35rem);
+  line-height: 1.5;
+  color: #222;
+  min-height: 2.5em;
+}
+
+.realm-loading-overlay__caret {
+  display: inline-block;
+  margin-left: 2px;
+  animation: realm-blink 0.9s step-end infinite;
+  color: #ff9600;
+}
+
+@keyframes realm-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+
+.bubble-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.bubble {
+  width: 100px; /* Adjust size as needed */
+  height: 100px; /* Adjust size as needed */
+  transition: transform 0.3s ease-in-out; /* Smoother transition */
+}
+
+.bubble.animate {
+  transform: scale(1.2); /* Scale up the bubble */
+  animation: pop 0.8s ease-in-out forwards; /* Extended duration for a more natural effect */
+}
+
+@keyframes pop {
+  0% {
+      transform: scale(1);
+  }
+  15% {
+      transform: scale(1.05); /* Slightly scale up for a more gradual effect */
+  }
+  30% {
+      transform: scale(1.1); /* Scale up a bit more for a realistic bounce */
+  }
+  50% {
+      transform: scale(1.15); /* Peak scale for a pronounced effect */
+  }
+  70% {
+      transform: scale(1.1); /* Scale down slightly to create a bounce effect */
+  }
+  100% {
+      transform: scale(1);
+  }
+}
+
+.floating-bubble {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% {
+      transform: translate(0, 0);
+  }
+  50% {
+      transform: translate(var(--float-heightX), var(--float-heightY)); /* Use the CSS variable for vertical movement */
+  }
+  100% {
+      transform: translate(0, 0);
+  }
+}
+
+.scrollable-container::-webkit-scrollbar {
+  display: none; /* Hide scrollbar */
+}
+
+/* Hide scrollbar for IE and Edge */
+.scrollable-container {
+  -ms-overflow-style: none; /* Hide scrollbar */
+  scrollbar-width: none; /* Hide scrollbar */
+}
+/* Hide scrollbar for Chrome, Safari, and Opera */
+/* Hide scrollbar for Chrome, Safari, and Opera */
+.threejs-container::-webkit-scrollbar {
+  display: none; /* Hide scrollbar */
+}
+
+/* Hide scrollbar for IE and Edge */
+.threejs-container {
+  -ms-overflow-style: none; /* Hide scrollbar */
+  scrollbar-width: none; /* Hide scrollbar */
+  overflow: hidden; /* Prevent scrolling */
+}
+
+/* Optional: Hide scrollbar for the body */
+body {
+  overflow: hidden; /* Prevent scrolling on the body */
+}
+.wheel {
+  transition: transform 1s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 200px; /* Adjust size as needed */
+  height: 200px; /* Adjust size as needed */
+  border: 2px solid #ccc; /* Optional: border for visibility */
+  border-radius: 50%; /* Make it circular */
+}
+
+.rotate {
+  transform: rotate(360deg);
+}

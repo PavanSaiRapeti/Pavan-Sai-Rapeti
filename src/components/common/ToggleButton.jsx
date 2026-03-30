@@ -1,26 +1,37 @@
-import React, { useState } from 'react';
+import React, { useEffect } from "react";
+import { ActiveIndicator } from "./ActiveIndicator";
+import { useDispatch, useSelector } from "react-redux";
+import { setCurrentIndex } from "../../redux/actions/reactActions";
+import staticText from "../../content/staticText.json";
 
 export const ToggleButton = () => {
-  const [active, setActive] = useState('projects');
+  const dispatch = useDispatch();
+  const {currentIndex} = useSelector((state) => state.react);
+  const {isScroll} = useSelector((state) => state.camera);
 
-  const buttons = [
-    { label: 'PROJECTS', value: 'projects' },
-    { label: 'EXPERIENCE', value: 'experience' },
-    { label: 'CERTIFICATES', value: 'certificates' },
-    { label: 'ABOUT ME', value: 'aboutMe' },
-  ];
+  const buttons = staticText.toggleButtons;
+
+  useEffect(() => {
+    if(isScroll){
+      dispatch(setCurrentIndex(5));
+    }else{
+      dispatch(setCurrentIndex(2));
+    }
+  }, [isScroll]);
 
   return (
-    <div className="flex bg-gray-200 rounded-full p-1">
-      {buttons.map(button => (
+    <div className="flex rounded-full p-1">
+      {buttons.map((button) => (
         <button
           key={button.value}
-          className={`flex-1 py-2 px-4 rounded-full font-bold transition-colors ${
-            active === button.value ? 'bg-gray-800 text-white' : 'text-gray-800'
-          }`}
-          onClick={() => setActive(button.value)}
+          className={`flex-1 py-2 px-4 rounded-full transition-colors font-fontbutton text-[1.3rem]`}
+          onClick={() => dispatch(setCurrentIndex(button.value))}
         >
-          {button.label}
+          <div className="flex flex-col ">
+            {button.label}
+            <br />
+            {currentIndex === button.value ? <ActiveIndicator /> : null}
+          </div>
         </button>
       ))}
     </div>

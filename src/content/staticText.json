@@ -1,0 +1,92 @@
+{
+  "meta": {
+    "title": "Pavan Sai Rapeti",
+    "description": "Pavan sai's Website"
+  },
+  "overlay": {
+    "firstName": "PAVAN SAI",
+    "lastName": "RAPETI"
+  },
+  "toggleButtons": [
+    { "label": "SKILLS", "value": 1 },
+    { "label": "MYSELF", "value": 2 }
+  ],
+  "chatBot": {
+    "defaultBotResponse": "Bot response",
+    "inputPlaceholder": "Wanna ask a question ?",
+    "sendButton": "Send"
+  },
+  "skills": {
+    "typingIntro": "HI I'M PAVAN SAI CLONE,"
+  },
+  "loading": {
+    "imageAlt": "Loading...",
+    "label": "Loading...",
+    "realmLine": "Loading into Pavan Sai's Realm",
+    "animeGifSrc": "/images/myanime.gif",
+    "minSweepMs": 3200
+  },
+  "bubble": {
+    "heading": "MY TECH STACK",
+    "joke": "Why did the bubble pop? Because it couldn't find its inner peace and just burst into laughter!",
+    "skillNames": [
+      "React",
+      "Javascript",
+      "Typescript",
+      "NextJS",
+      "Expressjs",
+      "Nodejs",
+      "MongoDB",
+      "Blender",
+      "Aws",
+      "Redux",
+      "Html",
+      "Css",
+      "Tailwindcss"
+    ]
+  },
+  "statusDisplay": {
+    "availabilityLabel": "status : available for hire",
+    "introPrefix": "I'm",
+    "roles": [
+      "FRONT-END DEVELOPER",
+      "REACT DEVELOPER",
+      "SOFTWARE DEVELOPER",
+      "FULL STACK DEVELOPER"
+    ],
+    "footerTitle": "Designed and Developed with LOVE",
+    "description": "With Seven years of experience in the field, I've honed my skills in developing enterprise products, leading development teams, and building B2B applications. My expertise extends to a variety of industries, including manufacturing, ecommerce, and more."
+  },
+  "dino": {
+    "roarCaption": "roarrrrrr..."
+  },
+  "flyGuide": {
+    "speech": {
+      "resumeStack": "Those papers are my résumé — click them (or the label) to open the full PDF in a window.",
+      "resumeLabel": "Résumé shortcut — same as the stack: opens my CV.",
+      "hobbies": "A little board about what I do when I’m not shipping features.",
+      "about": "A short visual intro — who I am and how I like to work.",
+      "worldMap": "Where I’m based now (Toronto) and where I’m from — ask me about either."
+    }
+  },
+  "room": {
+    "resumeLabel": "Resume",
+    "resumeModalTitle": "My Resume",
+    "resumeCloseButton": "Close",
+    "resumeUrl": "/resume.pdf",
+    "hobbiesLabel": "Hobbies",
+    "fontLines": [
+      "With",
+      "Seven years",
+      "of forging",
+      "in the code's fierce flame,",
+      "I build robust solutions",
+      "where power meets the",
+      "game.",
+      "Currently in ",
+      "Toronto, ON, CA",
+      "born in",
+      "India"
+    ]
+  }
+}

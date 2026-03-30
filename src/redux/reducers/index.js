@@ -1,10 +1,10 @@
-import { combineReducers } from 'redux';
-import cameraReducer from './cameraReducer';
-// import other reducers
+import { combineReducers } from "redux";
+import cameraReducer from "./cameraReducer";
+import reactReducer from "./reactReducer";
 
 const rootReducer = combineReducers({
   camera: cameraReducer,
-  // other reducers
+  react: reactReducer,
 });
 
 export default rootReducer;

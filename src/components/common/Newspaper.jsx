@@ -1,21 +1,16 @@
-import React, { useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { useFrame, useLoader } from "@react-three/fiber";
 import * as THREE from "three";
 import * as CANNON from 'cannon-es';
 
 const Newspaper = () => {
   const clothRef = useRef();
-  const world = new CANNON.World({
-    gravity: new CANNON.Vec3(0, -0.5, 0)
-  });
+  const simulationRef = useRef(null);
 
   const Nx = 2;
   const Ny = 3;
   const mass = 0.1;
   const dist = 0.1;
-  const shape = new CANNON.Particle();
-  const particles = [];
-
   // Preload textures
   const [texture, bumpMap, normalMap] = useLoader(THREE.TextureLoader, [
     '/images/textures/postertexture.jpg',
@@ -23,58 +18,62 @@ const Newspaper = () => {
     '/images/textures/postertextureNORM.jpg'
   ]);
 
-  // Set the initial x-position to place the cloth vertically
-  const initialXPosition = 0; // Centered vertically
-
-  for (let i = 0; i < Nx + 1; i++) {
-    particles.push([]);
-    for (let j = 0; j < Ny + 1; j++) {
-      const particle = new CANNON.Body({
-        mass: j === Ny ? 0 : mass,
-        shape,
-        position: new CANNON.Vec3(initialXPosition , (j - Ny) * dist, (i - Nx * 0.5) * dist),
-        velocity: new CANNON.Vec3(0, 0, 0),
-        linearDamping: 0.9, // Add damping to reduce oscillation
-        angularDamping: 0.9
-      });
-      particles[i].push(particle);
-      world.addBody(particle);
-    }
-  }
-
-  function connect(i1, j1, i2, j2) {
-    const stiffness = 1e5;
-    const damping = 0.1;
-    world.addConstraint(new CANNON.DistanceConstraint(
-      particles[i1][j1],
-      particles[i2][j2],
-      dist,
-      stiffness,
-      damping
-    ));
-  }
-
-  for (let i = 0; i < Nx + 1; i++) {
-    for (let j = 0; j < Ny + 1; j++) {
-      if (i < Nx) connect(i, j, i + 1, j);
-      if (j < Ny) connect(i, j, i, j + 1);
-    }
-  }
-
-  const clothGeometry = new THREE.PlaneGeometry(1, 1, Nx, Ny);
-  const clothMat = new THREE.MeshStandardMaterial({
+  const clothGeometry = useMemo(() => new THREE.PlaneGeometry(1, 1, Nx, Ny), [Nx, Ny]);
+  const clothMat = useMemo(() => new THREE.MeshStandardMaterial({
     side: THREE.DoubleSide,
     map: texture,
-    roughness: 12,
-    metalness: 0.5,
+    roughness: 1,
+    metalness: 1.5,
     bumpMap: bumpMap,
     bumpScale: 0.02,
     normalMap: normalMap,
     normalScale: new THREE.Vector2(0.5, 0.5),
-    color: 0xffffff
-  });
+    transparent: true,
+    alphaTest: 1
+  }), [texture, bumpMap, normalMap]);
+
+  if (!simulationRef.current) {
+    const world = new CANNON.World({
+      gravity: new CANNON.Vec3(0, -0.5, 0)
+    });
+    const shape = new CANNON.Particle();
+    const particles = [];
+
+    for (let i = 0; i < Nx + 1; i++) {
+      particles.push([]);
+      for (let j = 0; j < Ny + 1; j++) {
+        const particle = new CANNON.Body({
+          mass: j === Ny ? 0 : mass,
+          shape,
+          position: new CANNON.Vec3(0, (j - Ny) * dist, (i - Nx * 0.5) * dist),
+          velocity: new CANNON.Vec3(0, 0, 0),
+          linearDamping: 0.9,
+          angularDamping: 0.9
+        });
+        particles[i].push(particle);
+        world.addBody(particle);
+      }
+    }
+
+    for (let i = 0; i < Nx + 1; i++) {
+      for (let j = 0; j < Ny + 1; j++) {
+        if (i < Nx) {
+          world.addConstraint(new CANNON.DistanceConstraint(particles[i][j], particles[i + 1][j], dist));
+        }
+        if (j < Ny) {
+          world.addConstraint(new CANNON.DistanceConstraint(particles[i][j], particles[i][j + 1], dist));
+        }
+      }
+    }
+
+    simulationRef.current = { world, particles };
+  }
 
   useFrame(() => {
+    if (!simulationRef.current) return;
+    const { world, particles } = simulationRef.current;
+    const positionAttribute = clothGeometry.attributes.position;
+
     // Update physics world
     world.step(1 / 60);
 
@@ -82,12 +81,10 @@ const Newspaper = () => {
     for (let i = 0; i < Nx + 1; i++) {
       for (let j = 0; j < Ny + 1; j++) {
         const index = j * (Nx + 1) + i;
-        const positionAttribute = clothGeometry.attributes.position;
         const position = particles[i][Ny - j].position;
         positionAttribute.setXYZ(index, position.x, position.y, position.z);
-        positionAttribute.needsUpdate = true;
 
-        // Reduce turbulence
+        // Add subtle movement without excessive allocations.
         const turbulence = new CANNON.Vec3(
           (Math.random() - 0.51) * 0.05,
           (Math.random() - 0.51) * 0.05,
@@ -96,7 +93,7 @@ const Newspaper = () => {
         particles[i][j].applyForce(turbulence, particles[i][j].position);
       }
     }
-    clothGeometry.attributes.position.needsUpdate = true;
+    positionAttribute.needsUpdate = true;
   });
 
   return (

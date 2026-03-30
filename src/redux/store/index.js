@@ -9,7 +9,7 @@ import rootSaga from '../sagas/rootSaga';
 const persistConfig = {
   key: 'root',
   storage,
-  blacklist :['camera']
+  blacklist :['camera','react']
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

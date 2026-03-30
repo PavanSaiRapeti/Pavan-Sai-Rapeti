@@ -1,8 +1,23 @@
+import Image from 'next/image';
+import staticText from '../content/staticText.json';
 
-const LoadingScreen = () => (
-  <div className="loading-screen " >
-    <p className=" m-0 flex flex-col justify-center items-center fixed text-xl"><img src="/images/loadingGif.gif" alt="Loading..." width={100} /> Loading...</p>
-  </div>
-);
+/** Legacy simple loader; home page uses {@link RealmLoadingOverlay} instead. */
+const LoadingScreen = () => {
+  const gif = staticText.loading?.animeGifSrc ?? '/images/my-anime.gif';
+  return (
+    <div className="loading-screen">
+      <p className="m-0 flex flex-col justify-center items-center fixed text-xl">
+        <Image
+          src={gif}
+          alt={staticText.loading.imageAlt}
+          width={100}
+          height={100}
+          unoptimized
+        />
+        {staticText.loading.label}
+      </p>
+    </div>
+  );
+};
 
 export default LoadingScreen; 
