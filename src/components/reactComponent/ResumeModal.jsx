@@ -99,28 +99,28 @@ export default function ResumeModal({ title, closeLabel, onClose }) {
   const m = resumeMeta;
 
   return (
-    <div className="absolute inset-0 z-30 bg-[#f6f1e6] p-4 md:p-8 print:static print:bg-white print:p-0">
-      <div className="flex h-full w-full max-h-full flex-col overflow-hidden rounded-xl bg-[#fffdf6] shadow-xl ring-1 ring-black/5 print:h-auto print:max-h-none print:overflow-visible print:rounded-none print:shadow-none print:ring-0">
-        <div className="flex flex-shrink-0 flex-wrap items-center justify-between gap-2 border-b border-gray-200 bg-white/70 px-4 py-2 backdrop-blur print:hidden">
+    <div className="absolute inset-0 z-30 bg-gradient-to-br from-[#0b1220] via-[#141b2d] to-[#060a12] p-4 md:p-8 print:static print:bg-white print:p-0">
+      <div className="flex h-full w-full max-h-full flex-col overflow-hidden rounded-xl bg-white/5 shadow-2xl ring-1 ring-white/10 backdrop-blur-[6px] print:h-auto print:max-h-none print:overflow-visible print:rounded-none print:shadow-none print:ring-0 print:bg-transparent print:backdrop-blur-0">
+        <div className="flex flex-shrink-0 flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-white/10 px-4 py-2 backdrop-blur print:hidden">
           <h2 className="text-lg font-semibold text-black">{title}</h2>
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              className="rounded border border-gray-300 bg-white px-3 py-1 text-sm text-gray-900 hover:bg-gray-50"
+              className="rounded border border-white/15 bg-white/10 px-3 py-1 text-sm text-white hover:bg-white/15"
               onClick={downloadDocx}
             >
-              Download DOCX (ATS)
+              Download DOCX
             </button>
             <button
               type="button"
-              className="rounded border border-gray-300 bg-white px-3 py-1 text-sm text-gray-900 hover:bg-gray-50"
+              className="rounded border border-white/15 bg-white/10 px-3 py-1 text-sm text-white hover:bg-white/15"
               onClick={savePdfViaPrint}
             >
-              Download PDF (ATS)
+              Download PDF
             </button>
             <button
               type="button"
-              className="rounded bg-black px-3 py-1 text-sm text-white"
+              className="rounded bg-white px-3 py-1 text-sm font-semibold text-[#0b1220] hover:bg-white/90"
               onClick={onClose}
             >
               {closeLabel}
@@ -128,11 +128,11 @@ export default function ResumeModal({ title, closeLabel, onClose }) {
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto bg-[#f6f1e6] print:overflow-visible">
+        <div className="min-h-0 flex-1 overflow-y-auto bg-transparent print:overflow-visible">
           <article
             ref={articleRef}
             id="ats-resume"
-            className="relative mx-auto w-full max-w-[8.5in] bg-[#fffdf6] px-5 py-6 text-black md:my-6 md:rounded-md md:border md:border-slate-200 md:px-10 md:py-10 md:shadow-[0_18px_60px_rgba(15,23,42,0.10)] print:my-0 print:rounded-none print:border-0 print:px-8 print:py-6"
+            className="relative mx-auto w-full max-w-[8.5in] bg-[#fffdf6] px-5 py-6 text-black md:my-6 md:rounded-md md:border md:border-black/10 md:px-10 md:py-10 md:shadow-[0_24px_80px_rgba(2,6,23,0.55)] print:my-0 print:rounded-none print:border-0 print:px-8 print:py-6"
             style={{ fontFamily: "Arial, Helvetica, sans-serif" }}
           >
             <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.04] print:hidden" style={{ backgroundImage: "repeating-linear-gradient(0deg, rgba(0,0,0,0.06) 0px, rgba(0,0,0,0.06) 1px, transparent 1px, transparent 3px)" }} />
