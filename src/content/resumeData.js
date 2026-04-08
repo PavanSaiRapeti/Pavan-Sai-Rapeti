@@ -10,7 +10,8 @@ export const resumeMeta = {
   email: "pavansairapeti28@gmail.com",
   website: "https://www.pavansairapeti.com",
   websiteLabel: "www.pavansairapeti.com",
-  socialLabels: ["GitHub", "LinkedIn"],
+  githubUrl: "https://github.com/PavanSaiRapeti",
+  linkedinUrl: "https://www.linkedin.com/in/pavanrapeti",
 };
 
 export const summary = `Full Stack Developer with 6+ years of hands-on experience in building dynamic and responsive web applications using React.js, Next.js, Tailwind CSS, PostgreSQL, Express.js, and Node.js, C#, ASP.NET. Passionate about delivering exceptional customer experiences through innovative and efficient solutions. Technical expertise, combined with creativity and a commitment to quality, enables effective contribution to any development team. Eager to apply full-stack experience to drive success in cutting-edge projects.`;

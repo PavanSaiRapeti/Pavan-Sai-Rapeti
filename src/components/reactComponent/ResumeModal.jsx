@@ -5,22 +5,23 @@ import {
   skillSections,
   experience,
   education,
-  buildResumePlainText,
 } from "../../content/resumeData";
+import { buildResumeDocxBlob } from "../../utils/buildResumeDocx";
 
 /** Scoped so copied innerHTML (print / PDF) renders without Tailwind. */
 const ATS_RESUME_SCOPED_CSS = `
-#ats-resume { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; line-height: 1.35; color: #111; }
-#ats-resume h1 { font-size: 18pt; font-weight: 700; margin: 0 0 4px 0; }
-#ats-resume .ats-headline { font-size: 11pt; font-weight: 700; margin: 0 0 8px 0; }
-#ats-resume .ats-meta { font-size: 10pt; margin: 0 0 10px 0; line-height: 1.45; }
+#ats-resume { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; line-height: 1.38; color: #111; }
+#ats-resume h1 { font-size: 20pt; font-weight: 800; margin: 0 0 4px 0; letter-spacing: -0.02em; }
+#ats-resume .ats-headline { font-size: 11pt; font-weight: 700; margin: 0 0 10px 0; color: #222; }
+#ats-resume .ats-meta { font-size: 10pt; margin: 0 0 12px 0; line-height: 1.5; }
 #ats-resume .ats-meta p { margin: 2px 0; }
-#ats-resume h2 { font-size: 11pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; margin: 14px 0 6px 0; padding-bottom: 2px; border-bottom: 1px solid #333; }
-#ats-resume h3 { font-size: 11pt; font-weight: 700; margin: 12px 0 4px 0; }
-#ats-resume p { margin: 4px 0; }
-#ats-resume ul { margin: 4px 0 8px 0; padding-left: 1.15em; }
-#ats-resume li { margin-bottom: 3px; }
-#ats-resume a { color: #1e40af; text-decoration: underline; }
+#ats-resume h2 { font-size: 10.5pt; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; margin: 16px 0 8px 0; padding-bottom: 4px; border-bottom: 1px solid #333; }
+#ats-resume h3 { font-size: 11pt; font-weight: 800; margin: 12px 0 4px 0; }
+#ats-resume p { margin: 5px 0; }
+#ats-resume ul { margin: 6px 0 10px 0; padding-left: 1.15em; }
+#ats-resume li { margin-bottom: 4px; }
+#ats-resume a { color: #1e40af; text-decoration: none; border-bottom: 1px solid rgba(30,64,175,0.35); }
+#ats-resume a:hover { border-bottom-color: rgba(30,64,175,0.85); }
 #ats-resume .ats-job { margin-bottom: 1rem; }
 #ats-resume .ats-role { margin-top: 0.65rem; }
 #ats-resume .ats-summary { margin-top: 0.25rem; font-size: 11pt; }
@@ -29,7 +30,7 @@ const ATS_RESUME_SCOPED_CSS = `
 `;
 
 const PRINT_BODY_WRAPPER = `
-  body { margin: 0.5in; max-width: 8.5in; }
+  body { margin: 0.5in; max-width: 8.5in; background: #fffdf6; }
 `;
 
 function ExperienceSection({ job }) {
@@ -66,16 +67,14 @@ function ExperienceSection({ job }) {
 
 export default function ResumeModal({ title, closeLabel, onClose }) {
   const articleRef = useRef(null);
-  const githubUrl = process.env.NEXT_PUBLIC_RESUME_GITHUB_URL;
-  const linkedinUrl = process.env.NEXT_PUBLIC_RESUME_LINKEDIN_URL;
+  const githubUrl = process.env.NEXT_PUBLIC_RESUME_GITHUB_URL || resumeMeta.githubUrl;
+  const linkedinUrl = process.env.NEXT_PUBLIC_RESUME_LINKEDIN_URL || resumeMeta.linkedinUrl;
 
-  const downloadTxt = useCallback(() => {
-    const blob = new Blob([buildResumePlainText()], {
-      type: "text/plain;charset=utf-8",
-    });
+  const downloadDocx = useCallback(async () => {
+    const blob = await buildResumeDocxBlob();
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "Pavan_Sai_Rapeti_Resume.txt";
+    a.download = "Pavan_Sai_Rapeti_Resume.docx";
     a.click();
     URL.revokeObjectURL(a.href);
   }, []);
@@ -100,24 +99,24 @@ export default function ResumeModal({ title, closeLabel, onClose }) {
   const m = resumeMeta;
 
   return (
-    <div className="absolute inset-0 z-30 bg-black/70 p-4 md:p-8 print:static print:bg-white print:p-0">
-      <div className="flex h-full w-full max-h-full flex-col overflow-hidden rounded-lg bg-white shadow-xl print:h-auto print:max-h-none print:overflow-visible print:rounded-none print:shadow-none">
-        <div className="flex flex-shrink-0 flex-wrap items-center justify-between gap-2 border-b border-gray-200 px-4 py-2 print:hidden">
+    <div className="absolute inset-0 z-30 bg-[#f6f1e6] p-4 md:p-8 print:static print:bg-white print:p-0">
+      <div className="flex h-full w-full max-h-full flex-col overflow-hidden rounded-xl bg-[#fffdf6] shadow-xl ring-1 ring-black/5 print:h-auto print:max-h-none print:overflow-visible print:rounded-none print:shadow-none print:ring-0">
+        <div className="flex flex-shrink-0 flex-wrap items-center justify-between gap-2 border-b border-gray-200 bg-white/70 px-4 py-2 backdrop-blur print:hidden">
           <h2 className="text-lg font-semibold text-black">{title}</h2>
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               className="rounded border border-gray-300 bg-white px-3 py-1 text-sm text-gray-900 hover:bg-gray-50"
-              onClick={downloadTxt}
+              onClick={downloadDocx}
             >
-              Download TXT (ATS)
+              Download DOCX (ATS)
             </button>
             <button
               type="button"
               className="rounded border border-gray-300 bg-white px-3 py-1 text-sm text-gray-900 hover:bg-gray-50"
               onClick={savePdfViaPrint}
             >
-              Save as PDF
+              Download PDF (ATS)
             </button>
             <button
               type="button"
@@ -129,13 +128,14 @@ export default function ResumeModal({ title, closeLabel, onClose }) {
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto bg-white print:overflow-visible">
+        <div className="min-h-0 flex-1 overflow-y-auto bg-[#f6f1e6] print:overflow-visible">
           <article
             ref={articleRef}
             id="ats-resume"
-            className="mx-auto max-w-[8.5in] px-5 py-6 text-black print:px-8 print:py-6"
+            className="relative mx-auto w-full max-w-[8.5in] bg-[#fffdf6] px-5 py-6 text-black md:my-6 md:rounded-md md:border md:border-slate-200 md:px-10 md:py-10 md:shadow-[0_18px_60px_rgba(15,23,42,0.10)] print:my-0 print:rounded-none print:border-0 print:px-8 print:py-6"
             style={{ fontFamily: "Arial, Helvetica, sans-serif" }}
           >
+            <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.04] print:hidden" style={{ backgroundImage: "repeating-linear-gradient(0deg, rgba(0,0,0,0.06) 0px, rgba(0,0,0,0.06) 1px, transparent 1px, transparent 3px)" }} />
             <style dangerouslySetInnerHTML={{ __html: ATS_RESUME_SCOPED_CSS }} />
             <header>
               <h1 className="text-2xl font-bold tracking-tight">{m.fullName}</h1>
@@ -187,16 +187,18 @@ export default function ResumeModal({ title, closeLabel, onClose }) {
               <h2 id="skills-heading" className="text-sm font-bold uppercase tracking-wide text-black">
                 Technical Skills &amp; Expertise
               </h2>
-              {skillSections.map((sec) => (
-                <div key={sec.title} className="mt-3">
-                  <h3 className="text-sm font-semibold text-gray-900">{sec.title}</h3>
-                  <ul className="mt-1 list-disc space-y-1 pl-5 text-sm leading-snug text-gray-800">
-                    {sec.bullets.map((b, i) => (
-                      <li key={i}>{b}</li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
+              <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
+                {skillSections.map((sec) => (
+                  <div key={sec.title}>
+                    <h3 className="text-sm font-semibold text-gray-900">{sec.title}</h3>
+                    <ul className="mt-1 list-disc space-y-1 pl-5 text-sm leading-snug text-gray-800">
+                      {sec.bullets.map((b, i) => (
+                        <li key={i}>{b}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
             </section>
 
             <section className="mt-5" aria-labelledby="exp-heading">
