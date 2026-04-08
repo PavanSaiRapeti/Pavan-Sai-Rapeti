@@ -17,6 +17,7 @@ import AssetLoadBridge from "./AssetLoadBridge";
 import ScrollControlsMobileFix from "./ScrollControlsMobileFix";
 import MobileRealmScrollUI from "../MobileRealmScrollUI";
 import { RealmCursorContext } from "../../context/RealmCursorContext";
+import ResumeModal from "../reactComponent/ResumeModal";
 
 const flyCursorSrc = flyCursorUrl?.src || flyCursorUrl;
 const kickCursorSrc = kickCursorUrl?.src || kickCursorUrl;
@@ -62,8 +63,6 @@ export default function Scene({ onAssetsLoaded }) {
   const kickLockRef = useRef(false);
   const kickTimersRef = useRef([]);
   const isScroll = useSelector((state) => state.camera.isScroll);
-  const resumeUrl = process.env.NEXT_PUBLIC_RESUME_URL || staticText.room.resumeUrl;
-
   const realmFlagsRef = useRef({ textures: false, fonts: false, cursor: false });
 
   const pingAssetsLoaded = useCallback(() => {
@@ -324,25 +323,11 @@ export default function Scene({ onAssetsLoaded }) {
       ) : null}
       <MobileRealmScrollUI />
       {showResume ? (
-        <div className="absolute inset-0 z-30 bg-black/70 p-4 md:p-8">
-          <div className="flex h-full w-full flex-col overflow-hidden rounded-lg bg-white shadow-xl">
-            <div className="flex items-center justify-between border-b px-4 py-2">
-              <h2 className="text-lg font-semibold text-black">{staticText.room.resumeModalTitle}</h2>
-              <button
-                type="button"
-                className="rounded bg-black px-3 py-1 text-white"
-                onClick={() => setShowResume(false)}
-              >
-                {staticText.room.resumeCloseButton}
-              </button>
-            </div>
-            <iframe
-              title={staticText.room.resumeModalTitle}
-              src={resumeUrl}
-              className="h-full w-full border-0"
-            />
-          </div>
-        </div>
+        <ResumeModal
+          title={staticText.room.resumeModalTitle}
+          closeLabel={staticText.room.resumeCloseButton}
+          onClose={() => setShowResume(false)}
+        />
       ) : null}
     </div>
     </RealmCursorContext.Provider>

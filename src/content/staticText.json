@@ -73,8 +73,8 @@
   },
   "flyGuide": {
     "speech": {
-      "resumeStack": "Those papers are my résumé — click them (or the label) to open the full PDF in a window.",
-      "resumeLabel": "Résumé shortcut — same as the stack: opens my CV.",
+      "resumeStack": "Those papers are my résumé — click them (or the label) to open it, download a text file for ATS, or save as PDF.",
+      "resumeLabel": "Résumé shortcut — same as the stack: opens my résumé viewer.",
       "hobbies": "A little board about what I do when I’m not shipping features.",
       "about": "A short visual intro — who I am and how I like to work.",
       "worldMap": "Where I’m based now (Toronto) and where I’m from — ask me about either."
@@ -84,7 +84,6 @@
     "resumeLabel": "Resume",
     "resumeModalTitle": "My Resume",
     "resumeCloseButton": "Close",
-    "resumeUrl": "/resume.pdf",
     "hobbiesLabel": "Hobbies",
     "fontLines": [
       "With",
