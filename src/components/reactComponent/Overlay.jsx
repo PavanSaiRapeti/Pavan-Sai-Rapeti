@@ -4,13 +4,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { setCurrentIndex } from "../../redux/actions/reactActions";
 import staticText from "../../content/staticText.json";
 
-const STORAGE_KEY = "ps-realm-profile-visits";
-const SESSION_KEY = "ps-realm-visit-counted";
+const COUNT_KEY = "ps-realm-profile-visits";
+const VISITOR_KEY = "ps-realm-visitor-id";
+const LOCAL_COUNTED_KEY = "ps-realm-visitor-local-counted";
 
 function readLocalVisits() {
   if (typeof window === "undefined") return 0;
   try {
-    const n = parseInt(window.localStorage.getItem(STORAGE_KEY) || "0", 10);
+    const n = parseInt(window.localStorage.getItem(COUNT_KEY) || "0", 10);
     return Number.isFinite(n) && n >= 0 ? n : 0;
   } catch {
     return 0;
@@ -19,15 +20,45 @@ function readLocalVisits() {
 
 function writeLocalVisits(n) {
   try {
-    window.localStorage.setItem(STORAGE_KEY, String(n));
+    window.localStorage.setItem(COUNT_KEY, String(n));
+  } catch {
+    /* ignore */
+  }
+}
+
+function getOrCreateVisitorId() {
+  try {
+    let id = window.localStorage.getItem(VISITOR_KEY);
+    if (id && /^[A-Za-z0-9_-]{8,80}$/.test(id)) return id;
+    id =
+      typeof crypto !== "undefined" && crypto.randomUUID
+        ? crypto.randomUUID().replace(/-/g, "")
+        : `v${Date.now().toString(36)}${Math.random().toString(36).slice(2, 12)}`;
+    window.localStorage.setItem(VISITOR_KEY, id);
+    return id;
+  } catch {
+    return `v${Date.now().toString(36)}`;
+  }
+}
+
+function wasLocallyCounted(visitorId) {
+  try {
+    return window.localStorage.getItem(LOCAL_COUNTED_KEY) === visitorId;
+  } catch {
+    return false;
+  }
+}
+
+function markLocallyCounted(visitorId) {
+  try {
+    window.localStorage.setItem(LOCAL_COUNTED_KEY, visitorId);
   } catch {
     /* ignore */
   }
 }
 
 /**
- * Top name (only when hero is gone) + visits + game HUD (top-right).
- * Visits prefer Supabase via /api/visits; falls back to localStorage.
+ * Top name + unique visit count (visitor id stored in DB — no duplicate bumps).
  */
 const Overlay = ({ heroVisible = false }) => {
   const dispatch = useDispatch();
@@ -40,65 +71,50 @@ const Overlay = ({ heroVisible = false }) => {
     if (typeof window === "undefined") return;
     let cancelled = false;
 
-    const bump = async () => {
-      const local = readLocalVisits();
-      setVisits(local);
+    const applyCount = (n) => {
+      if (cancelled || typeof n !== "number" || !Number.isFinite(n) || n < 0)
+        return;
+      setVisits(n);
+      writeLocalVisits(n);
+    };
 
-      const already = (() => {
-        try {
-          return Boolean(window.sessionStorage.getItem(SESSION_KEY));
-        } catch {
-          return true;
-        }
-      })();
+    const syncVisits = async () => {
+      applyCount(readLocalVisits());
+      const visitorId = getOrCreateVisitorId();
 
       try {
-        if (!already) {
-          const res = await fetch("/api/visits", { method: "POST" });
-          const data = await res.json().catch(() => ({}));
-          if (!cancelled && res.ok && typeof data.count === "number") {
-            setVisits(data.count);
-            writeLocalVisits(data.count);
-            try {
-              window.sessionStorage.setItem(SESSION_KEY, "1");
-            } catch {
-              /* ignore */
-            }
-            return;
-          }
-          // API unavailable — local fallback
-          const next = local + 1;
-          writeLocalVisits(next);
-          try {
-            window.sessionStorage.setItem(SESSION_KEY, "1");
-          } catch {
-            /* ignore */
-          }
-          if (!cancelled) setVisits(next);
+        const res = await fetch("/api/visits", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ visitorId }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && typeof data.count === "number") {
+          applyCount(data.count);
+          markLocallyCounted(visitorId);
           return;
         }
 
-        const res = await fetch("/api/visits");
-        const data = await res.json().catch(() => ({}));
-        if (!cancelled && res.ok && typeof data.count === "number") {
-          setVisits(data.count);
-          writeLocalVisits(data.count);
+        // Offline / tables missing — local unique bump once per visitor id
+        if (!wasLocallyCounted(visitorId)) {
+          applyCount(readLocalVisits() + 1);
+          markLocallyCounted(visitorId);
+        } else {
+          const getRes = await fetch("/api/visits");
+          const getData = await getRes.json().catch(() => ({}));
+          if (getRes.ok && typeof getData.count === "number") {
+            applyCount(getData.count);
+          }
         }
       } catch {
-        if (!already) {
-          const next = local + 1;
-          writeLocalVisits(next);
-          try {
-            window.sessionStorage.setItem(SESSION_KEY, "1");
-          } catch {
-            /* ignore */
-          }
-          if (!cancelled) setVisits(next);
+        if (!wasLocallyCounted(visitorId)) {
+          applyCount(readLocalVisits() + 1);
+          markLocallyCounted(visitorId);
         }
       }
     };
 
-    bump();
+    syncVisits();
     return () => {
       cancelled = true;
     };
@@ -109,6 +125,7 @@ const Overlay = ({ heroVisible = false }) => {
   };
 
   const showName = !heroVisible;
+  const displayCount = Number.isFinite(visits) ? visits : 0;
 
   return (
     <div className="overlay-stack relative flex h-full min-h-0 w-full flex-col items-stretch pointer-events-none">
@@ -138,11 +155,15 @@ const Overlay = ({ heroVisible = false }) => {
         </div>
 
         <div className="overlay-top-right pointer-events-auto">
-          <div className="realm-visit-chip" aria-live="polite">
+          <div
+            className="realm-visit-chip"
+            aria-live="polite"
+            title="Unique profile visits"
+          >
             <span className="realm-visit-chip__label">
-              {staticText.realmHud?.visitsLabel ?? "VISITS"}
+              {staticText.realmHud?.visitsLabel ?? "VISIT"}
             </span>
-            <span className="realm-visit-chip__count">{visits}</span>
+            <span className="realm-visit-chip__count">{displayCount}</span>
           </div>
 
           <div

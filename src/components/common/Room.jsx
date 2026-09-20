@@ -357,14 +357,7 @@ const Room = ({
       selectedStationId={selectedStationId}
     />
     {/* Mailbox faces the screen — not planted on the desk floor */}
-    <DeskMailbox
-      onClick={() => onMailboxClick?.()}
-      onPointerEnter={() => {
-        clearNarrationTimer();
-        showNarration("mailbox");
-      }}
-      onPointerOut={hideNarrationSoon}
-    />
+    <DeskMailbox onClick={() => onMailboxClick?.()} />
     {/* Dino sits on the farther desk floor */}
     <group position={[0, 0, DESK_WORLD_Z]}>
       <DinoOnFloor onModeChange={onDinoModeChange} />

@@ -23,7 +23,7 @@ export const SCROLL_CHAPTERS = {
   heroFadeEnd: 0.055,
 };
 
-export const DESK_WORLD_Z = -2.85;
+export const DESK_WORLD_Z = -5.85;
 
 export const CAMERA_KEYS = {
   entrance: { x: 0, y: 2.05, z: 10.55, rotX: 0 },

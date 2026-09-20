@@ -79,7 +79,7 @@
     "roarCaption": "roarrrrrr..."
   },
   "realmHud": {
-    "visitsLabel": "VISITS",
+    "visitsLabel": "VISIT",
     "hint": "SCROLL ▼ ENTER"
   },
   "mailbox": {
@@ -88,6 +88,7 @@
     "close": "Close",
     "tabLeave": "Leave a note",
     "tabInbox": "Open mailbox",
+    "dream": "Click the mailbox — drop me a note. My inbox stays locked; only I can open it.",
     "leaveHint": "Say hi, ask about a role, or drop feedback — it lands in my box.",
     "nameLabel": "Name",
     "emailLabel": "Email",
@@ -119,7 +120,7 @@
       "hobby3d": "3D design and visualization — shapes, cameras, and one more render.",
       "about": "A short visual intro — who I am and how I like to work.",
       "worldMap": "Where I’m based now (Toronto) and where I’m from — ask me about either.",
-      "mailbox": "Red mailbox on the desk — leave a note, or try the lock if you’re me (you’re not).",
+      "mailbox": "Click the mailbox — leave a note for me. The inbox is locked; only I can open it with a passcode.",
       "careerTrail": "Scroll forward through every career chapter — then the camera arcs onto the desk.",
       "careerTcs": "TCS — System Engineer. Dashboards, Three.js, mentoring, and bank-grade builds.",
       "careerLti": "LTIMindtree — Senior Engineer. Nokia, Bekaert, MSC Direct migrations.",
