@@ -1,21 +1,14 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { ActiveIndicator } from "./ActiveIndicator";
 import { useDispatch, useSelector } from "react-redux";
 import { setCurrentIndex } from "../../redux/actions/reactActions";
 import staticText from "../../content/staticText.json";
 
-/** Corner dock — Skills only. */
+/** Corner dock — Skills only (stays open while scrolled). */
 export const ToggleButton = () => {
   const dispatch = useDispatch();
   const { currentIndex } = useSelector((state) => state.react);
-  const { isScroll } = useSelector((state) => state.camera);
   const buttons = staticText.toggleButtons;
-
-  useEffect(() => {
-    if (isScroll && currentIndex === 1) {
-      dispatch(setCurrentIndex(0));
-    }
-  }, [isScroll, currentIndex, dispatch]);
 
   const onPick = (value) => {
     if (currentIndex === value) {

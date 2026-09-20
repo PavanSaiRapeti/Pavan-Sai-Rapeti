@@ -7,6 +7,14 @@
     "firstName": "PAVAN SAI",
     "lastName": "RAPETI"
   },
+  "gameMenu": {
+    "label": "MENU",
+    "caption": "SELECT A QUEST",
+    "openHint": "OPEN",
+    "closeHint": "CLOSE",
+    "resetLabel": "RESTART",
+    "resetHint": "SPAWN"
+  },
   "toggleButtons": [
     { "label": "SKILLS", "value": 1 }
   ],
@@ -65,7 +73,7 @@
       "FULL STACK DEVELOPER"
     ],
     "footerTitle": "Designed and Developed with LOVE",
-    "description": "Full Stack Developer with 6+ years building dynamic web apps in React, Next.js, Node.js, and more — from enterprise dashboards to network automation."
+    "description": "6+ years shipping React, Next.js, and Node apps — from enterprise dashboards to network automation."
   },
   "dino": {
     "roarCaption": "roarrrrrr..."
@@ -73,6 +81,30 @@
   "realmHud": {
     "visitsLabel": "VISITS",
     "hint": "SCROLL ▼ ENTER"
+  },
+  "mailbox": {
+    "eyebrow": "DESK · MAILBOX",
+    "title": "Reach out",
+    "close": "Close",
+    "tabLeave": "Leave a note",
+    "tabInbox": "Open mailbox",
+    "leaveHint": "Say hi, ask about a role, or drop feedback — it lands in my box.",
+    "nameLabel": "Name",
+    "emailLabel": "Email",
+    "messageLabel": "Message",
+    "send": "Drop in the box",
+    "sending": "Sending…",
+    "sendOk": "Dropped in the box. Thanks!",
+    "sendError": "Could not send. Try again in a bit.",
+    "lockHint": "Locked. Only I can read what’s inside.",
+    "passLabel": "Passcode",
+    "unlock": "Unlock",
+    "unlocking": "Checking…",
+    "unlockError": "Lock jammed. Try again.",
+    "denyDefault": "It’s not yours — don’t try.",
+    "empty": "Empty box. Quiet day.",
+    "anon": "Anonymous",
+    "lockAgain": "Lock again"
   },
   "flyGuide": {
     "speech": {
@@ -87,6 +119,7 @@
       "hobby3d": "3D design and visualization — shapes, cameras, and one more render.",
       "about": "A short visual intro — who I am and how I like to work.",
       "worldMap": "Where I’m based now (Toronto) and where I’m from — ask me about either.",
+      "mailbox": "Red mailbox on the desk — leave a note, or try the lock if you’re me (you’re not).",
       "careerTrail": "Scroll forward through every career chapter — then the camera arcs onto the desk.",
       "careerTcs": "TCS — System Engineer. Dashboards, Three.js, mentoring, and bank-grade builds.",
       "careerLti": "LTIMindtree — Senior Engineer. Nokia, Bekaert, MSC Direct migrations.",
@@ -98,7 +131,7 @@
   },
   "career": {
     "title": "Career Trail",
-    "subtitle": "forged in code",
+    "subtitle": "collect the set",
     "panelClose": "Close",
     "openResume": "Open full résumé",
     "stations": [

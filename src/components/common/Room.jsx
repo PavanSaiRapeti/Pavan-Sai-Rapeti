@@ -7,6 +7,7 @@ import { buildUrl } from "../../../utils/urlBuilder";
 import { TextureLoader } from "three";
 import staticText from "../../content/staticText.json";
 import DinoOnFloor from "./DinoOnFloor";
+import DeskMailbox from "./DeskMailbox";
 import HobbiesBoard from "./HobbiesBoard";
 import CareerTrail from "./CareerTrail";
 import { SCROLL_CHAPTERS, DESK_WORLD_Z } from "../../utils/scrollChapters";
@@ -81,6 +82,7 @@ function NarrationHotspotPx({
 
 const Room = ({
   onResumeClick,
+  onMailboxClick,
   onDinoModeChange,
   onHoverNarration,
   onExperienceSelect,
@@ -305,6 +307,15 @@ const Room = ({
         showNarration={showNarration}
         hideNarrationSoon={hideNarrationSoon}
         clearNarrationTimer={clearNarrationTimer}
+      />
+      <DeskMailbox
+        position={[2.2, -0.5, 1.85]}
+        onClick={() => onMailboxClick?.()}
+        onPointerEnter={() => {
+          clearNarrationTimer();
+          showNarration("mailbox");
+        }}
+        onPointerOut={hideNarrationSoon}
       />
       <mesh
         receiveShadow

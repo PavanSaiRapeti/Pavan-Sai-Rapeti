@@ -3,21 +3,24 @@
  * hero → paper flies in (wavy) → stick flat → fly off (wavy) → career → desk.
  */
 export const SCROLL_CHAPTERS = {
-  entranceHoldEnd: 0.02,
-  posterLiftStart: 0.02,
+  entranceHoldEnd: 0,
+  /** Poster starts the instant scroll begins (no blank gap after hero) */
+  posterLiftStart: 0,
   /** Paper reaches the lens */
-  posterStickEnd: 0.1,
-  /** Short scroll beat while flat on lens (no timed hold) */
-  posterHoldEnd: 0.12,
-  posterFlyOffEnd: 0.17,
-  /** Career corridor — a bit shorter so scroll feels faster through stations */
-  careerFadeInStart: 0.14,
-  careerFullStart: 0.19,
+  posterStickEnd: 0.08,
+  /** Short beat on the lens */
+  posterHoldEnd: 0.1,
+  posterFlyOffEnd: 0.15,
+  /** Career corridor */
+  careerFadeInStart: 0.12,
+  careerFullStart: 0.17,
   careerFullEnd: 0.58,
   careerFadeOutEnd: 0.66,
   deskFadeStart: 0.66,
   deskFadeFull: 0.88,
   dinoUnlock: 0.94,
+  /** Hero stays until poster is well into frame (overlap, no blank) */
+  heroFadeEnd: 0.055,
 };
 
 export const DESK_WORLD_Z = -2.85;
@@ -26,7 +29,7 @@ export const CAMERA_KEYS = {
   entrance: { x: 0, y: 2.05, z: 10.55, rotX: 0 },
   throughPoster: { x: 0, y: 2.06, z: 9.35, rotX: 0 },
   careerEnd: { x: 0, y: 2.1, z: -0.4, rotX: 0 },
-  desk: { x: 0, y: 7.6, z: DESK_WORLD_Z + 0.35, rotX: -Math.PI / 2 },
+  desk: { x: 0, y: 7.6, z: DESK_WORLD_Z - 0.15, rotX: -Math.PI / 2 },
 };
 
 export const CAREER_CAMERA = {
@@ -87,17 +90,17 @@ function THREE_CLAMP01(u) {
 export function posterLiftProgress(t, chapters = SCROLL_CHAPTERS) {
   if (t <= chapters.posterLiftStart) return 0;
   if (t >= chapters.posterStickEnd) return 1;
-  return easeOutCubic(
+  return easeInOut(
     (t - chapters.posterLiftStart) /
       (chapters.posterStickEnd - chapters.posterLiftStart)
   );
 }
 
-/** 0 while on-lens beat; then 0→1 fly-off (scroll only). */
+/** 0 while on-lens beat; then 0→1 fly-off (scroll only). Symmetric for reverse. */
 export function posterFlyOffProgress(t, chapters = SCROLL_CHAPTERS) {
   if (t <= chapters.posterHoldEnd) return 0;
   if (t >= chapters.posterFlyOffEnd) return 1;
-  return easeInCubic(
+  return easeInOut(
     (t - chapters.posterHoldEnd) /
       (chapters.posterFlyOffEnd - chapters.posterHoldEnd)
   );

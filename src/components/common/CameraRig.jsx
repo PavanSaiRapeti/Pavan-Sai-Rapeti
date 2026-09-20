@@ -12,7 +12,7 @@ import {
 } from "../../utils/scrollChapters";
 
 /**
- * Scroll camera: hold through poster beat → straight career → straight desk.
+ * Scroll camera — tracks offset tightly both ways (forward + reverse).
  */
 const CameraRig = ({ isDefaultCamera }) => {
   const scroll = useScroll();
@@ -32,11 +32,19 @@ const CameraRig = ({ isDefaultCamera }) => {
   useFrame((_, delta) => {
     const raw = scroll.offset ?? 0;
     const dt = Math.min(delta, 0.05);
-    smoothT.current = THREE.MathUtils.damp(smoothT.current, raw, 5.2, dt);
+    // Catch up faster when scrolling back so reverse doesn’t feel sticky
+    const reversing = raw < smoothT.current - 0.001;
+    const scrollLambda = reversing ? 16 : 9;
+    smoothT.current = THREE.MathUtils.damp(
+      smoothT.current,
+      raw,
+      scrollLambda,
+      dt
+    );
     const t = smoothT.current;
 
-    if ((raw > 0 && !isScroll) || (raw === 0 && isScroll)) {
-      dispatch(setScroll(raw > 0));
+    if ((raw > 0.004 && !isScroll) || (raw <= 0.004 && isScroll)) {
+      dispatch(setScroll(raw > 0.004));
     }
     if ((raw > 0.95 && !isScrollToBtm) || (raw < 0.98 && isScroll)) {
       dispatch(setScrollBtm(raw > 0.98));
@@ -49,10 +57,7 @@ const CameraRig = ({ isDefaultCamera }) => {
     const cam = cameraRef.current;
     if (!cam) return;
     const nearDesk = t >= SCROLL_CHAPTERS.deskFadeFull;
-    const holding = t <= SCROLL_CHAPTERS.posterHoldEnd;
-    const inCareer =
-      t > SCROLL_CHAPTERS.posterFlyOffEnd && t < SCROLL_CHAPTERS.careerFadeOutEnd;
-    const follow = nearDesk ? 14 : holding ? 12 : inCareer ? 11 : 8;
+    const follow = reversing ? 18 : nearDesk ? 14 : 12;
     cam.position.lerp(targetPosition.current, 1 - Math.exp(-follow * dt));
     cam.rotation.x = THREE.MathUtils.damp(
       cam.rotation.x,

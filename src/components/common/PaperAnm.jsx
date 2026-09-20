@@ -25,12 +25,12 @@ const PaperAnm = () => {
   const scaleRef = useRef(0.45);
   const lightI = useRef(0);
   const bobPhase = useRef(0);
-  const pos = useRef(new THREE.Vector3(0.35, -0.2, -9.4));
-  const rot = useRef(new THREE.Euler(0.55, -0.35, 0.45));
+  const pos = useRef(new THREE.Vector3(0.25, -0.12, -4.6));
+  const rot = useRef(new THREE.Euler(0.42, -0.28, 0.35));
 
-  /** Start far in camera space */
-  const farPos = useMemo(() => new THREE.Vector3(0.4, -0.25, -9.4), []);
-  const farRot = useMemo(() => new THREE.Euler(0.62, -0.4, 0.5), []);
+  /** Start mid-distance so paper is readable as soon as hero fades */
+  const farPos = useMemo(() => new THREE.Vector3(0.25, -0.12, -4.6), []);
+  const farRot = useMemo(() => new THREE.Euler(0.42, -0.28, 0.35), []);
 
   /** Attached = lightly crossed on the lens (single shared pose for stick + fly start) */
   const stickPos = useMemo(() => new THREE.Vector3(0.02, -0.01, -1.05), []);
@@ -58,11 +58,18 @@ const PaperAnm = () => {
     if (!mesh) return;
     const dt = Math.min(delta, 0.045);
     const rawT = scroll.offset ?? 0;
-
-    smoothT.current = THREE.MathUtils.damp(smoothT.current, rawT, 5.5, dt);
+    const reversing = rawT < smoothT.current - 0.001;
+    const scrollLambda = reversing ? 16 : 9;
+    smoothT.current = THREE.MathUtils.damp(
+      smoothT.current,
+      rawT,
+      scrollLambda,
+      dt
+    );
     const t = smoothT.current;
 
-    if (rawT < SCROLL_CHAPTERS.posterLiftStart && t < SCROLL_CHAPTERS.posterLiftStart) {
+    // Show paper from first scroll tick (overlap with hero fade)
+    if (rawT <= 0 && t <= 0) {
       posterClothState.calm = 0;
       posterClothState.gust = 1;
       smoothLift.current = 0;
@@ -73,20 +80,20 @@ const PaperAnm = () => {
       return;
     }
 
+    const phaseLambda = reversing ? 18 : 10;
     smoothLift.current = THREE.MathUtils.damp(
       smoothLift.current,
       posterLiftProgress(t),
-      7.2,
+      phaseLambda,
       dt
     );
     const lift = smoothLift.current;
 
-    // Fly only after attached — still continuous from stick pose
-    const flyGoal = lift >= 0.96 ? posterFlyOffProgress(t) : 0;
+    // Drive fly from scroll only — works both forward and reverse
     smoothFly.current = THREE.MathUtils.damp(
       smoothFly.current,
-      flyGoal,
-      6.0,
+      posterFlyOffProgress(t),
+      phaseLambda,
       dt
     );
     const flyAmt = smoothFly.current;
@@ -134,11 +141,10 @@ const PaperAnm = () => {
       }
     }
 
-    const easeLift = 1 - Math.pow(1 - lift, 2.35);
-    const easeFly = flyAmt * flyAmt * (3 - 2 * flyAmt);
+    const easeLift = lift;
+    const easeFly = flyAmt;
 
     // --- Continuous pose: far → stickCross → flyEnd ---
-    // Wave decays to 0 as we attach, then grows again as we leave
     const approachWave = Math.max(0, 1 - easeLift);
     const leaveWave = Math.sin(easeFly * Math.PI);
     const wave = flyAmt > 0.001 ? leaveWave : approachWave;
@@ -172,14 +178,14 @@ const PaperAnm = () => {
 
     const scaleTarget = flyAmt > 0.001
       ? THREE.MathUtils.lerp(fillScale, fillScale * 0.42, easeFly)
-      : THREE.MathUtils.lerp(0.36, fillScale, easeLift);
+      : THREE.MathUtils.lerp(0.62, fillScale, easeLift);
 
     const lightTarget = flyAmt > 0.001
       ? THREE.MathUtils.lerp(0.18, 0.02, easeFly)
       : THREE.MathUtils.lerp(0.08, 0.18, easeLift);
 
-    // Damp toward target so phase changes never pop
-    const follow = flyAmt > 0.001 ? 9 : 11;
+    // Track pose tightly — faster on reverse so it doesn’t lag the camera
+    const follow = reversing ? 20 : flyAmt > 0.001 ? 14 : 16;
     const k = 1 - Math.exp(-follow * dt);
     pos.current.x += (targetPos.x - pos.current.x) * k;
     pos.current.y += (targetPos.y - pos.current.y) * k;

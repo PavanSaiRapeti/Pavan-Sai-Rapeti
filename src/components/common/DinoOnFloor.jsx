@@ -61,34 +61,33 @@ const DINO_ON_FLOOR_CONFIG = {
     jumpKey: " ",
   },
   walk: {
-    radiusWorldUnits: 1.15,
+    radiusWorldUnits: 0.45,
   },
   size: {
     planeWidth: 5 * 0.5 * 0.5 * 0.65,
     planeHeight: 1.8 * 0.5 * 0.5 * 2.15 * 0.65,
   },
   /**
-   * Rests on the desk floor at the bottom of the top-down view (still on-lens).
-   * Enters only after the desk is fully on screen.
+   * Bottom of the top-down desk view (screen bottom = +Z).
    */
   placement: {
-    positionX: 0.35,
+    positionX: 0,
     /** Sit on the floor plane (desk floor ≈ -0.5; sprite center slightly above) */
     positionY: -0.48,
-    /** Bottom of frustum; keep < ~3.2 so it stays on screen at desk cam */
-    positionZ: 2.55,
+    /** Hard bottom of the top-down frame */
+    positionZ: 3.35,
   },
   enter: {
     /** Desk must be fully on screen first */
     scrollUnlock: SCROLL_CHAPTERS.dinoUnlock,
-    /** Start just past the bottom edge, then walk onto screen */
-    startZ: 3.55,
-    enterSeconds: 1.15,
+    /** Start off the bottom edge, then walk onto screen */
+    startZ: 4.7,
+    enterSeconds: 1.0,
   },
   /** World Y added on phones (`body[data-mobile="1"]`) so the dino sits above the bottom safe area */
   mobile: {
-    yLift: 0.12,
-    zNudge: -0.15,
+    yLift: 0.06,
+    zNudge: 0.12,
   },
   /**
    * Checker key: light grey = `sat` + `lum > minLuminance`. Dark checker tiles need `keyDarkChecker` + RGB spread.

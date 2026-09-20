@@ -1,35 +1,50 @@
 import { Text } from "@react-three/drei/core/Text";
 import { useScroll } from "@react-three/drei/web/ScrollControls";
 import { useFrame } from "@react-three/fiber";
-import React, { useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { buildUrl } from "../../../utils/urlBuilder";
 import staticText from "../../content/staticText.json";
 import { scrollVisibility, SCROLL_CHAPTERS } from "../../utils/scrollChapters";
 
 /**
- * 3D career corridor — thick kraft monuments past the entrance poster zone.
+ * Vertical ID cards — white body + black text only.
  */
 const CAREER_TRAIL_CONFIG = {
   card: {
-    width: 0.92,
-    height: 1.08,
-    depth: 0.2,
-    face: "#FFFDF8",
-    kraft: "#C9A66B",
-    wood: "#6E4E1C",
-    paper: "#FFF8E8",
+    width: 1.05,
+    height: 1.55,
+    depth: 0.028,
+    radius: 0.07,
+    white: "#FFFFFF",
+    ink: "#111111",
+    muted: "#555555",
   },
-  /** Straight aisle — nudged toward camera (front) */
   stations: [
-    { x: -0.9, y: 2.05, z: 6.25, yaw: 0 },
-    { x: 0.9, y: 2.08, z: 5.05, yaw: 0 },
-    { x: -0.9, y: 2.05, z: 3.85, yaw: 0 },
-    { x: 0.9, y: 2.08, z: 2.65, yaw: 0 },
-    { x: -0.85, y: 2.05, z: 1.45, yaw: 0 },
-    { x: 0.85, y: 2.08, z: 0.25, yaw: 0 },
+    { x: -1.15, y: 2.15, z: 6.25, yaw: 0.02 },
+    { x: 1.15, y: 2.18, z: 5.05, yaw: -0.02 },
+    { x: -1.15, y: 2.15, z: 3.85, yaw: 0.02 },
+    { x: 1.15, y: 2.18, z: 2.65, yaw: -0.02 },
+    { x: -1.1, y: 2.15, z: 1.45, yaw: 0.02 },
+    { x: 1.1, y: 2.18, z: 0.25, yaw: -0.02 },
   ],
 };
+
+function roundedRectShape(w, h, r) {
+  const hw = w * 0.5;
+  const hh = h * 0.5;
+  const s = new THREE.Shape();
+  s.moveTo(-hw + r, -hh);
+  s.lineTo(hw - r, -hh);
+  s.quadraticCurveTo(hw, -hh, hw, -hh + r);
+  s.lineTo(hw, hh - r);
+  s.quadraticCurveTo(hw, hh, hw - r, hh);
+  s.lineTo(-hw + r, hh);
+  s.quadraticCurveTo(-hw, hh, -hw, hh - r);
+  s.lineTo(-hw, -hh + r);
+  s.quadraticCurveTo(-hw, -hh, -hw + r, -hh);
+  return s;
+}
 
 function applyCardOpacity(matsRef, op) {
   const full = op >= 0.98;
@@ -55,7 +70,21 @@ function registerMat(matsRef, mat, baseOpacity = 1) {
   matsRef.current.push(mat);
 }
 
-function MonumentCard({
+function parseDates(dates) {
+  const parts = String(dates || "")
+    .split(/[–—-]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (parts.length >= 2) {
+    return { join: parts[0], end: parts[1].split("·")[0].trim() };
+  }
+  if (parts.length === 1) {
+    return { join: parts[0], end: "—" };
+  }
+  return { join: "—", end: "—" };
+}
+
+function IdBadgeCard({
   station,
   layout,
   index,
@@ -71,23 +100,34 @@ function MonumentCard({
   const groupRef = useRef(null);
   const matsRef = useRef([]);
   const cfg = CAREER_TRAIL_CONFIG.card;
-  const phase = index * 0.9;
+  const phase = index * 0.85;
+  const active = hovered || selected;
+  const faceZ = cfg.depth * 0.5 + 0.012;
+  const isFront = index % 2 === 0;
+  const { join, end } = parseDates(station.dates);
+  const idNo = String(12420000 + index * 137 + (station.year || "").length * 11);
+  const stackLine = (station.stack || []).slice(0, 2).join(" · ");
+
+  const bodyShape = useMemo(
+    () => roundedRectShape(cfg.width, cfg.height, cfg.radius),
+    [cfg.width, cfg.height, cfg.radius]
+  );
 
   useFrame((state, dt) => {
     const g = groupRef.current;
     if (!g) return;
     const t = state.clock.elapsedTime;
-    const bob = Math.sin(t * 0.85 + phase) * 0.05;
-    const lift = hovered || selected ? 0.12 : 0;
-    g.position.y = THREE.MathUtils.damp(g.position.y, layout.y + bob + lift, 7, dt);
-    g.rotation.y = THREE.MathUtils.damp(g.rotation.y, layout.yaw, 6, dt);
-
-    const op = opacityRef.current;
-    applyCardOpacity(matsRef, op);
-    g.visible = op > 0.04;
+    const bob = Math.sin(t * 0.85 + phase) * 0.03;
+    g.position.y = THREE.MathUtils.damp(
+      g.position.y,
+      layout.y + bob + (active ? 0.1 : 0),
+      8,
+      dt
+    );
+    g.rotation.y = THREE.MathUtils.damp(g.rotation.y, layout.yaw, 7, dt);
+    applyCardOpacity(matsRef, opacityRef.current);
+    g.visible = opacityRef.current > 0.04;
   });
-
-  const faceZ = cfg.depth * 0.5 + 0.012;
 
   return (
     <group
@@ -109,163 +149,165 @@ function MonumentCard({
         onSelect?.(station);
       }}
     >
-      <mesh position={[0, -cfg.height * 0.56, 0]} castShadow>
-        <boxGeometry args={[cfg.width * 0.58, 0.14, cfg.depth * 1.4]} />
-        <meshStandardMaterial
-          ref={(m) => registerMat(matsRef, m)}
-          color={cfg.wood}
-          roughness={0.88}
-        />
-      </mesh>
-      <mesh position={[0, -cfg.height * 0.48, 0]}>
-        <boxGeometry args={[cfg.width * 0.78, 0.09, cfg.depth * 1.2]} />
-        <meshStandardMaterial
-          ref={(m) => registerMat(matsRef, m)}
-          color={cfg.kraft}
-          roughness={0.82}
-        />
-      </mesh>
-
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={[cfg.width, cfg.height, cfg.depth]} />
-        <meshStandardMaterial
-          ref={(m) => registerMat(matsRef, m)}
-          color={cfg.face}
-          roughness={0.62}
-          metalness={0.02}
-          emissive={hovered || selected ? station.accent : "#1a140c"}
-          emissiveIntensity={hovered || selected ? 0.18 : 0.03}
-        />
-      </mesh>
-
-      <mesh position={[-cfg.width * 0.5 - 0.012, 0, 0]}>
-        <boxGeometry args={[0.05, cfg.height * 0.98, cfg.depth * 0.98]} />
-        <meshStandardMaterial
-          ref={(m) => registerMat(matsRef, m)}
-          color={cfg.kraft}
-          roughness={0.85}
-        />
-      </mesh>
-      <mesh position={[cfg.width * 0.5 + 0.012, 0, 0]}>
-        <boxGeometry args={[0.05, cfg.height * 0.98, cfg.depth * 0.98]} />
-        <meshStandardMaterial
-          ref={(m) => registerMat(matsRef, m)}
-          color={cfg.kraft}
-          roughness={0.85}
-        />
-      </mesh>
-
-      {/* High-contrast paper face */}
-      <mesh position={[0, 0.02, faceZ]}>
-        <planeGeometry args={[cfg.width * 0.88, cfg.height * 0.78]} />
-        <meshStandardMaterial
-          ref={(m) => registerMat(matsRef, m)}
-          color={cfg.paper}
-          roughness={0.7}
-        />
-      </mesh>
-
-      <mesh position={[0, cfg.height * 0.4, faceZ + 0.01]}>
-        <boxGeometry args={[cfg.width * 0.82, 0.09, 0.04]} />
-        <meshStandardMaterial
-          ref={(m) => registerMat(matsRef, m)}
-          color={station.accent}
-          roughness={0.4}
-          metalness={0.12}
-        />
-      </mesh>
-
-      <mesh position={[0, 0.28, faceZ + 0.04]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.13, 0.13, 0.055, 28]} />
-        <meshStandardMaterial
-          ref={(m) => registerMat(matsRef, m)}
-          color={station.accent}
-          roughness={0.35}
-          metalness={0.2}
-        />
-      </mesh>
-      <Text
-        position={[0, 0.28, faceZ + 0.09]}
-        font={logoFont}
-        fontSize={0.08}
-        color="#FFFDF7"
-        anchorX="center"
-        anchorY="middle"
-        outlineWidth={0.004}
-        outlineColor="#1e1e24"
-        pointerEvents="none"
+      <mesh
+        position={[0.02, -cfg.height * 0.52, -0.02]}
+        rotation={[-Math.PI / 2, 0, 0]}
       >
-        {station.year}
-      </Text>
+        <planeGeometry args={[cfg.width * 0.9, 0.12]} />
+        <meshBasicMaterial
+          ref={(m) => registerMat(matsRef, m, 0.18)}
+          color="#000000"
+          transparent
+          opacity={0.18}
+          depthWrite={false}
+        />
+      </mesh>
 
-      <Text
-        position={[0, 0.05, faceZ + 0.04]}
-        font={childFont}
-        fontSize={0.095}
-        color="#1E1E24"
-        anchorX="center"
-        anchorY="middle"
-        maxWidth={cfg.width * 0.84}
-        textAlign="center"
-        outlineWidth={0.005}
-        outlineColor="#FFF8E8"
-        pointerEvents="none"
-      >
-        {station.company}
-      </Text>
-      <Text
-        position={[0, -0.12, faceZ + 0.04]}
-        font={childFont}
-        fontSize={0.055}
-        color="#3A2F1C"
-        anchorX="center"
-        anchorY="middle"
-        maxWidth={cfg.width * 0.86}
-        textAlign="center"
-        pointerEvents="none"
-      >
-        {station.role}
-      </Text>
-      <Text
-        position={[0, -0.26, faceZ + 0.04]}
-        font={childFont}
-        fontSize={0.042}
-        color="#5A5040"
-        anchorX="center"
-        anchorY="middle"
-        maxWidth={cfg.width * 0.86}
-        textAlign="center"
-        pointerEvents="none"
-      >
-        {station.dates}
-      </Text>
-      <Text
-        position={[0, -0.38, faceZ + 0.04]}
-        font={childFont}
-        fontSize={0.038}
-        color="#F96E2A"
-        anchorX="center"
-        anchorY="middle"
-        outlineWidth={0.002}
-        outlineColor="#FFF8E8"
-        pointerEvents="none"
-      >
-        click to open
-      </Text>
+      <mesh castShadow receiveShadow position={[0, 0, -cfg.depth * 0.5]}>
+        <extrudeGeometry
+          args={[bodyShape, { depth: cfg.depth, bevelEnabled: false }]}
+        />
+        <meshStandardMaterial
+          ref={(m) => registerMat(matsRef, m)}
+          color={cfg.white}
+          roughness={0.55}
+          metalness={0}
+        />
+      </mesh>
+
+      {isFront ? (
+        <>
+          <Text
+            position={[cfg.width * 0.4, cfg.height * 0.4, faceZ]}
+            font={logoFont}
+            fontSize={0.028}
+            color={cfg.ink}
+            anchorX="right"
+            anchorY="middle"
+            pointerEvents="none"
+          >
+            {`JOIN DATE: ${join}`}
+          </Text>
+          <Text
+            position={[cfg.width * 0.4, cfg.height * 0.34, faceZ]}
+            font={logoFont}
+            fontSize={0.028}
+            color={cfg.ink}
+            anchorX="right"
+            anchorY="middle"
+            pointerEvents="none"
+          >
+            {`END DATE: ${end}`}
+          </Text>
+
+          <Text
+            position={[0, -0.05, faceZ]}
+            font={logoFont}
+            fontSize={0.085}
+            color={cfg.ink}
+            anchorX="center"
+            anchorY="middle"
+            maxWidth={cfg.width * 0.88}
+            textAlign="center"
+            pointerEvents="none"
+          >
+            {station.company.toUpperCase()}
+          </Text>
+          <Text
+            position={[0, -0.22, faceZ]}
+            font={childFont}
+            fontSize={0.038}
+            color={cfg.muted}
+            anchorX="center"
+            anchorY="middle"
+            maxWidth={cfg.width * 0.85}
+            textAlign="center"
+            pointerEvents="none"
+          >
+            {station.role}
+          </Text>
+
+          <Text
+            position={[0, -cfg.height * 0.4, faceZ]}
+            font={logoFont}
+            fontSize={0.032}
+            color={cfg.muted}
+            anchorX="center"
+            anchorY="middle"
+            letterSpacing={0.06}
+            pointerEvents="none"
+          >
+            {`ID NO. ${idNo}`}
+          </Text>
+        </>
+      ) : (
+        <>
+          <Text
+            position={[0, cfg.height * 0.18, faceZ]}
+            font={logoFont}
+            fontSize={0.072}
+            color={cfg.ink}
+            anchorX="center"
+            anchorY="middle"
+            maxWidth={cfg.width * 0.88}
+            textAlign="center"
+            pointerEvents="none"
+          >
+            {station.company.toUpperCase()}
+          </Text>
+
+          <Text
+            position={[0, -0.02, faceZ]}
+            font={childFont}
+            fontSize={0.038}
+            color={cfg.ink}
+            anchorX="center"
+            anchorY="middle"
+            maxWidth={cfg.width * 0.8}
+            textAlign="center"
+            pointerEvents="none"
+          >
+            {station.role}
+          </Text>
+          <Text
+            position={[0, -0.14, faceZ]}
+            font={logoFont}
+            fontSize={0.03}
+            color={cfg.muted}
+            anchorX="center"
+            anchorY="middle"
+            maxWidth={cfg.width * 0.8}
+            textAlign="center"
+            pointerEvents="none"
+          >
+            {stackLine || station.dates}
+          </Text>
+
+          <Text
+            position={[0, -cfg.height * 0.38, faceZ]}
+            font={logoFont}
+            fontSize={0.032}
+            color={cfg.muted}
+            anchorX="center"
+            anchorY="middle"
+            letterSpacing={0.06}
+            pointerEvents="none"
+          >
+            {`ID NO. ${idNo}`}
+          </Text>
+        </>
+      )}
 
       <pointLight
-        position={[0.2, 0.5, 1.4]}
-        intensity={hovered || selected ? 1.1 : 0.65}
-        distance={5}
-        color="#FFF0D4"
+        position={[0.08, 0.4, 0.85]}
+        intensity={active ? 0.55 : 0.28}
+        distance={3}
+        color="#FFFFFF"
       />
     </group>
   );
 }
 
-/**
- * 3D career corridor — camera flies past monuments (after poster entrance).
- */
 export default function CareerTrail({
   showNarration,
   hideNarrationSoon,
@@ -292,9 +334,9 @@ export default function CareerTrail({
     const show = op > 0.04;
     if (rootRef.current) rootRef.current.visible = show;
     const lightMul = show ? op : 0;
-    if (ambientRef.current) ambientRef.current.intensity = 0.28 * lightMul;
-    if (dirRef.current) dirRef.current.intensity = 0.75 * lightMul;
-    if (pointRef.current) pointRef.current.intensity = 0.6 * lightMul;
+    if (ambientRef.current) ambientRef.current.intensity = 0.6 * lightMul;
+    if (dirRef.current) dirRef.current.intensity = 1.15 * lightMul;
+    if (pointRef.current) pointRef.current.intensity = 0.35 * lightMul;
   });
 
   return (
@@ -304,48 +346,21 @@ export default function CareerTrail({
         ref={dirRef}
         position={[1.5, 5, 8]}
         intensity={0}
-        color="#FFF8E8"
+        color="#FFFFFF"
       />
       <pointLight
         ref={pointRef}
         position={[0, 3, 7.5]}
         intensity={0}
-        color="#FFB068"
+        color="#FFFFFF"
         distance={12}
       />
-
-      {/* aisle strip removed — straight card corridor only */}
-
-      <Text
-        position={[0, 2.85, 6.9]}
-        font={childFont}
-        fontSize={0.2}
-        color="#1E1E24"
-        anchorX="center"
-        anchorY="middle"
-        outlineWidth={0.01}
-        outlineColor="#F8EFD8"
-        pointerEvents="none"
-      >
-        {career.title ?? "Career Trail"}
-      </Text>
-      <Text
-        position={[0, 2.6, 6.9]}
-        font={childFont}
-        fontSize={0.085}
-        color="#F96E2A"
-        anchorX="center"
-        anchorY="middle"
-        pointerEvents="none"
-      >
-        {career.subtitle ?? "forged in code"}
-      </Text>
 
       {stations.map((station, i) => {
         const layout = layouts[i];
         if (!layout) return null;
         return (
-          <MonumentCard
+          <IdBadgeCard
             key={station.id}
             station={station}
             layout={layout}

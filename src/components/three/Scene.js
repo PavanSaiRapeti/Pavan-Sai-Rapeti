@@ -7,7 +7,6 @@ import Room from "../common/Room";
 import PaperAnm from "../common/PaperAnm";
 import { useCallback, useEffect, useRef, useState } from "react";
 import ScrollBlink from "../common/ScrollBlink";
-import ProfileVisitHud from "../common/ProfileVisitHud";
 import RealmHeroCopy from "../common/RealmHeroCopy";
 import { useSelector } from "react-redux";
 import Overlay from "../reactComponent/Overlay";
@@ -21,6 +20,7 @@ import ScrollControlsMobileFix from "./ScrollControlsMobileFix";
 import MobileRealmScrollUI from "../MobileRealmScrollUI";
 import { RealmCursorContext } from "../../context/RealmCursorContext";
 import ResumeModal from "../reactComponent/ResumeModal";
+import MailboxModal from "../reactComponent/MailboxModal";
 import { SCROLL_CHAPTERS } from "../../utils/scrollChapters";
 
 const flyCursorSrc = flyCursorUrl?.src || flyCursorUrl;
@@ -52,23 +52,17 @@ const FLY_CURSOR_HOTSPOT = { x: 8, y: 7 };
 const FLY_CURSOR_HEIGHT_PX = 72;
 const KICK_CURSOR_HEIGHT_PX = 60;
 
-/** Sync DOM overlays to scroll chapters (hero + visits). */
-function ScrollOverlayGate({ onHero, onVisits }) {
+/** Sync DOM overlays to scroll chapters (hero). */
+function ScrollOverlayGate({ onHero }) {
   const scroll = useScroll();
   const lastHero = useRef(null);
-  const lastVisits = useRef(null);
   useFrame(() => {
     const t = scroll.offset ?? 0;
-    // Drop hero on the first bit of scroll (not after a long 2% of 12 pages)
-    const hero = t < 0.004;
-    const visits = t < SCROLL_CHAPTERS.posterFlyOffEnd;
+    // Keep hero until poster is already visible — no blank cream gap
+    const hero = t < SCROLL_CHAPTERS.heroFadeEnd;
     if (lastHero.current !== hero) {
       lastHero.current = hero;
       onHero(hero);
-    }
-    if (lastVisits.current !== visits) {
-      lastVisits.current = visits;
-      onVisits(visits);
     }
   });
   return null;
@@ -76,6 +70,7 @@ function ScrollOverlayGate({ onHero, onVisits }) {
 
 export default function Scene({ onAssetsLoaded }) {
   const [showResume, setShowResume] = useState(false);
+  const [showMailbox, setShowMailbox] = useState(false);
   const [activeExperience, setActiveExperience] = useState(null);
   const [dinoMode, setDinoMode] = useState("run");
   const [cursorInRoom, setCursorInRoom] = useState(false);
@@ -87,11 +82,12 @@ export default function Scene({ onAssetsLoaded }) {
   const [kickFrame, setKickFrame] = useState(0);
   const [kickSpriteRatio, setKickSpriteRatio] = useState(0.5);
   const [kickDisplaySrc, setKickDisplaySrc] = useState(kickCursorSrc);
-  const [showVisitHud, setShowVisitHud] = useState(true);
   const [showHeroCopy, setShowHeroCopy] = useState(true);
   const kickLockRef = useRef(false);
   const kickTimersRef = useRef([]);
   const isScroll = useSelector((state) => state.camera.isScroll);
+  const currentIndex = useSelector((state) => state.react.currentIndex);
+  const skillsOpen = currentIndex === 1;
   const resumeUrl = process.env.NEXT_PUBLIC_RESUME_URL || staticText.room.resumeUrl;
 
   const realmFlagsRef = useRef({ textures: false, fonts: false, cursor: false });
@@ -186,7 +182,7 @@ export default function Scene({ onAssetsLoaded }) {
   }, []);
 
   const playKick = useCallback((opts) => {
-    if (showResume) return;
+    if (showResume || showMailbox) return;
     const skipCursorGate = opts?.skipCursorGate === true;
     if (!skipCursorGate && !cursorInRoomRef.current) return;
     if (kickLockRef.current) return;
@@ -218,11 +214,11 @@ export default function Scene({ onAssetsLoaded }) {
       kickTimersRef.current = [];
     }, 340);
     kickTimersRef.current.push(tFrame1, tEnd);
-  }, [showResume]);
+  }, [showResume, showMailbox]);
 
   /** Skills bubbles sit above the canvas; room surface mouseleave was hiding the fly sprite. Track at window level. */
   useEffect(() => {
-    if (showResume || activeExperience) {
+    if (showResume || showMailbox || activeExperience) {
       setRoomCursor(false);
       return;
     }
@@ -237,9 +233,10 @@ export default function Scene({ onAssetsLoaded }) {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("blur", onBlur);
     };
-  }, [showResume, activeExperience, moveFlyCursor]);
+  }, [showResume, showMailbox, activeExperience, moveFlyCursor]);
 
-  const useFlyCursor = cursorInRoom && !showResume && !activeExperience;
+  const useFlyCursor =
+    cursorInRoom && !showResume && !showMailbox && !activeExperience;
   const roomCursor = useFlyCursor ? "none" : "default";
   const careerCopy = staticText.career ?? {};
 
@@ -258,7 +255,7 @@ export default function Scene({ onAssetsLoaded }) {
         }}
       />
       <div className="absolute scene-overlay-safe pointer-events-none z-[50]">
-        <Overlay />
+        <Overlay heroVisible={showHeroCopy && !showResume && !showMailbox && !activeExperience && !skillsOpen} />
       </div>
       {skillsOpen ? (
         <div className="skills-sheet" role="dialog" aria-label="Skills">
@@ -271,7 +268,7 @@ export default function Scene({ onAssetsLoaded }) {
         className="scene-room-surface absolute inset-0 z-0 h-full w-full min-h-0"
         onPointerDown={(e) => {
           if (e.pointerType === "mouse" && e.button !== 0) return;
-          if (showResume || activeExperience) return;
+          if (showResume || showMailbox || activeExperience) return;
           if (!cursorInRoomRef.current) return;
           moveFlyCursor(e.clientX, e.clientY);
           playKick();
@@ -284,14 +281,21 @@ export default function Scene({ onAssetsLoaded }) {
           style={{ background: "#FBF8EF", overflow: "hidden", cursor: roomCursor }}
           className="threejs-container h-full w-full"
         >
-          <ScrollControls pages={12} damping={0.62} style={{ left: "var(--scene-scroll-left, 15px)" }}>
+          <ScrollControls pages={12} damping={0.32} style={{ left: "var(--scene-scroll-left, 15px)" }}>
             <ScrollControlsMobileFix />
-            <ScrollOverlayGate onHero={setShowHeroCopy} onVisits={setShowVisitHud} />
+            <ScrollOverlayGate onHero={setShowHeroCopy} />
             <Room
               onResumeClick={() => {
                 setHoverNarration(null);
                 setActiveExperience(null);
+                setShowMailbox(false);
                 setShowResume(true);
+              }}
+              onMailboxClick={() => {
+                setHoverNarration(null);
+                setActiveExperience(null);
+                setShowResume(false);
+                setShowMailbox(true);
               }}
               onDinoModeChange={setDinoMode}
               onHoverNarration={setHoverNarration}
@@ -311,7 +315,7 @@ export default function Scene({ onAssetsLoaded }) {
           </ScrollControls>
         </Canvas>
       </div>
-      {hoverNarration && !showResume && !activeExperience ? (
+      {hoverNarration && !showResume && !showMailbox && !activeExperience ? (
         <div
           className="pointer-events-none fixed inset-0 z-[65] flex items-center justify-center px-6"
           aria-live="polite"
@@ -326,7 +330,7 @@ export default function Scene({ onAssetsLoaded }) {
           </div>
         </div>
       ) : null}
-      {activeExperience && !showResume ? (
+      {activeExperience && !showResume && !showMailbox ? (
         <div className="career-experience-overlay">
           <div
             className="career-experience-panel"
@@ -412,12 +416,7 @@ export default function Scene({ onAssetsLoaded }) {
       {!isScroll ? <ScrollBlink /> : ""}
       <RealmHeroCopy
         visible={
-          showHeroCopy && !showResume && !activeExperience && !skillsOpen
-        }
-      />
-      <ProfileVisitHud
-        visible={
-          showVisitHud && !showResume && !activeExperience && !skillsOpen
+          showHeroCopy && !showResume && !showMailbox && !activeExperience && !skillsOpen
         }
       />
       {dinoMode === "roar" ? (
@@ -435,6 +434,9 @@ export default function Scene({ onAssetsLoaded }) {
           closeLabel={staticText.room.resumeCloseButton}
           onClose={() => setShowResume(false)}
         />
+      ) : null}
+      {showMailbox ? (
+        <MailboxModal onClose={() => setShowMailbox(false)} />
       ) : null}
     </div>
     </RealmCursorContext.Provider>
