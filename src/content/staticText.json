@@ -31,10 +31,8 @@
     "rotateBody": "This portfolio’s 3D room is designed for a wide view. Turn your device sideways to continue.",
     "rotateHint": "Portrait mode is turned off on purpose so the scene stays usable.",
     "realmScroll": {
-      "toolbarLabel": "Move through the 3D room",
-      "top": "Room",
-      "mid": "Career",
-      "bottom": "Desk"
+      "toolbarLabel": "Scroll the 3D room",
+      "swipeHint": "Swipe up or down to scroll"
     }
   },
   "loading": {

@@ -247,7 +247,7 @@ export default function Scene({ onAssetsLoaded }) {
 
   return (
     <RealmCursorContext.Provider value={{ playKick }}>
-    <div className="relative w-screen h-screen overflow-hidden threejs-container">
+    <div className="relative h-full w-full overflow-hidden threejs-container">
       <AssetLoadBridge
         onTexturesReady={() => {
           realmFlagsRef.current.textures = true;

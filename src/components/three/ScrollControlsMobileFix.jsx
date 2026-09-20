@@ -4,12 +4,11 @@ import { useEffect, useRef } from "react";
 import { REALM_SCROLL_SET_EVENT } from "../../utils/realmScrollBus";
 
 /**
- * Improves drei's ScrollControls on touch devices: iOS-friendly overflow,
- * programmatic scroll from MobileRealmScroll chips, optional touch pan backup.
+ * Touch-friendly ScrollControls: iOS overflow + swipe pan on the scene surface.
  */
 export default function ScrollControlsMobileFix() {
   const scrollState = useScroll();
-  const { invalidate } = useThree();
+  const { invalidate, gl } = useThree();
   const touchRef = useRef({ y: 0, active: false });
 
   useEffect(() => {
@@ -34,44 +33,59 @@ export default function ScrollControlsMobileFix() {
     const onBus = (e) => {
       applyTarget(e.detail?.t ?? 0);
     };
-
     window.addEventListener(REALM_SCROLL_SET_EVENT, onBus);
 
-    const mobileLandscape = () =>
-      document.body?.dataset?.mobileLandscape === "1";
+    const isMobileScrollMode = () =>
+      document.body?.dataset?.mobileLandscape === "1" ||
+      document.body?.dataset?.mobile === "1";
 
     const onTouchStart = (ev) => {
-      if (!mobileLandscape() || ev.touches.length !== 1) return;
+      if (!isMobileScrollMode() || ev.touches.length !== 1) return;
       touchRef.current = { y: ev.touches[0].clientY, active: true };
     };
 
     const onTouchMove = (ev) => {
-      if (!mobileLandscape() || !touchRef.current.active || ev.touches.length !== 1)
+      if (!isMobileScrollMode() || !touchRef.current.active || ev.touches.length !== 1)
         return;
       const y = ev.touches[0].clientY;
       const dy = touchRef.current.y - y;
       touchRef.current.y = y;
-      el.scrollTop += dy * 1.15;
-      ev.preventDefault();
+      const max = el.scrollHeight - el.clientHeight;
+      if (max > 1) {
+        el.scrollTop += dy * 1.35;
+        if (scrollState.scroll) {
+          scrollState.scroll.current = el.scrollTop / max;
+        }
+        invalidate();
+      }
+      if (ev.cancelable) ev.preventDefault();
     };
 
     const onTouchEnd = () => {
       touchRef.current.active = false;
     };
 
-    el.addEventListener("touchstart", onTouchStart, { passive: true });
-    el.addEventListener("touchmove", onTouchMove, { passive: false });
-    el.addEventListener("touchend", onTouchEnd, { passive: true });
-    el.addEventListener("touchcancel", onTouchEnd, { passive: true });
+    // Scroll overlay + canvas (touches often hit the WebGL surface)
+    const canvas = gl?.domElement;
+    const targets = [el, canvas].filter(Boolean);
+
+    targets.forEach((node) => {
+      node.addEventListener("touchstart", onTouchStart, { passive: true });
+      node.addEventListener("touchmove", onTouchMove, { passive: false });
+      node.addEventListener("touchend", onTouchEnd, { passive: true });
+      node.addEventListener("touchcancel", onTouchEnd, { passive: true });
+    });
 
     return () => {
       window.removeEventListener(REALM_SCROLL_SET_EVENT, onBus);
-      el.removeEventListener("touchstart", onTouchStart);
-      el.removeEventListener("touchmove", onTouchMove);
-      el.removeEventListener("touchend", onTouchEnd);
-      el.removeEventListener("touchcancel", onTouchEnd);
+      targets.forEach((node) => {
+        node.removeEventListener("touchstart", onTouchStart);
+        node.removeEventListener("touchmove", onTouchMove);
+        node.removeEventListener("touchend", onTouchEnd);
+        node.removeEventListener("touchcancel", onTouchEnd);
+      });
     };
-  }, [scrollState, invalidate]);
+  }, [scrollState, invalidate, gl]);
 
   return null;
 }

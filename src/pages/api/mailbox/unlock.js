@@ -59,10 +59,15 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true, messages: data || [] });
   } catch (err) {
     console.error("[api/mailbox/unlock]", err);
+    const missing =
+      err?.code === "PGRST205" ||
+      /Could not find the table/i.test(err?.message || "");
     return res.status(500).json({
       ok: false,
-      error: "unlock_failed",
-      message: "Lock jammed. Try again in a bit.",
+      error: missing ? "tables_missing" : "unlock_failed",
+      message: missing
+        ? "Mailbox tables aren’t set up yet. Run supabase/schema.sql in the Supabase SQL editor."
+        : "Lock jammed. Try again in a bit.",
     });
   }
 }
