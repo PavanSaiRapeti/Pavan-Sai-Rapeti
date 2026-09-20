@@ -1,22 +1,11 @@
 import React from "react";
-import dynamic from "next/dynamic";
-import { useSelector } from "react-redux";
+import Main from "../Main";
 
-const Main = dynamic(() => import("../Main"), {
-  ssr: false,
-});
-
-/** Layout split only on wide desktops; phones/tablets in landscape stay full-width (see globals `.my-canva-*`). */
+/** Skills playfield host — eager import so bubbles show immediately. */
 const MyCanva = () => {
-  const { currentIndex } = useSelector((state) => state.react);
-  const myself = currentIndex === 2;
-
   return (
-    <div
-      className={`my-canva-root flex w-full h-full min-h-0${myself ? " my-canva-root--myself" : ""}`}
-    >
-      <div className="my-canva-sidebar shrink-0" aria-hidden />
-      <div className="my-canva-main-col flex min-h-0 flex-1 flex-col">
+    <div className="my-canva-root my-canva-root--skills flex h-full min-h-0 w-full flex-col">
+      <div className="my-canva-main-col flex min-h-0 w-full flex-1 flex-col overflow-hidden">
         <Main />
       </div>
     </div>

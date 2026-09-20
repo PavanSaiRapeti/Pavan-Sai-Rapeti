@@ -4,88 +4,117 @@ import { Icon } from "./icons/Icon";
 import staticText from "../../content/staticText.json";
 
 const Name = staticText.bubble.skillNames;
-const skills = Name.map((name) => {
-  return { icon: <Icon key={name} Name={name} />, name };
-});
+const skills = Name.map((name) => ({
+  icon: <Icon key={name} Name={name} />,
+  name,
+}));
 
-const generateUniqueSpawns = (count, maxWidth, maxHeight, boxSize) => {
+/**
+ * Spread bubbles across the full playfield on a jittered grid
+ * (wider gaps than random packing).
+ */
+const generateSpreadSpawns = (count, maxWidth, maxHeight, boxSize) => {
+  const pad = Math.max(12, Math.floor(Math.min(maxWidth, maxHeight) * 0.04));
+  const usableW = Math.max(boxSize, maxWidth - 2 * pad - boxSize);
+  const usableH = Math.max(boxSize, maxHeight - 2 * pad - boxSize);
+
+  const cols = Math.max(3, Math.ceil(Math.sqrt(count * (maxWidth / Math.max(maxHeight, 1)))));
+  const rows = Math.max(3, Math.ceil(count / cols));
+  const cellW = usableW / Math.max(cols - 1, 1);
+  const cellH = usableH / Math.max(rows - 1, 1);
+
+  const slots = [];
+  for (let r = 0; r < rows; r += 1) {
+    for (let c = 0; c < cols; c += 1) {
+      slots.push({ r, c });
+    }
+  }
+  // Prefer outer-ish slots first so spread reads across the screen
+  slots.sort((a, b) => {
+    const da = Math.hypot(a.c - (cols - 1) / 2, a.r - (rows - 1) / 2);
+    const db = Math.hypot(b.c - (cols - 1) / 2, b.r - (rows - 1) / 2);
+    return db - da;
+  });
+
   const spawns = [];
+  const jitterX = cellW * 0.22;
+  const jitterY = cellH * 0.22;
+
+  for (let i = 0; i < count && i < slots.length; i += 1) {
+    const { r, c } = slots[i];
+    let x = pad + c * cellW + (Math.random() - 0.5) * jitterX;
+    let y = pad + r * cellH + (Math.random() - 0.5) * jitterY;
+    x = Math.max(pad, Math.min(maxWidth - boxSize - pad, x));
+    y = Math.max(pad, Math.min(maxHeight - boxSize - pad, y));
+    spawns.push({ x: Math.floor(x), y: Math.floor(y) });
+  }
+
+  // If grid ran short, fill remaining with spaced randoms
+  const minDist = boxSize * 1.75;
   let attempts = 0;
-  const maxAttempts = 28000;
-  /** Keep bubbles inside the playfield: float animation uses ~10px translate + tooltip/subpixel */
-  const pad = Math.min(
-    16,
-    Math.max(8, Math.floor(Math.min(maxWidth, maxHeight) * 0.05))
-  );
-  const innerW = Math.max(boxSize, maxWidth - 2 * pad);
-  const innerH = Math.max(boxSize, maxHeight - 2 * pad);
-  const xSpan = Math.max(1, innerW - boxSize);
-  const ySpan = Math.max(1, innerH - boxSize);
-
-  /**
-   * Minimum center-to-center distance so bubbles don’t cluster (old rule only blocked a small axis box).
-   * Ease off slightly when the playfield is tight so all skills can still spawn.
-   */
-  const minSide = Math.min(innerW, innerH);
-  const loose = boxSize * 1.4;
-  const tightPack = Math.max(boxSize * 1.08, (minSide / Math.sqrt(count + 3)) * 1.15);
-  const minCenterDistClamped = Math.min(loose, Math.max(tightPack, boxSize * 1.22));
-
-  const half = boxSize / 2;
-
-  while (spawns.length < count && attempts < maxAttempts) {
-    const x = pad + Math.floor(Math.random() * xSpan);
-    const y = pad + Math.floor(Math.random() * ySpan);
-    const cx = x + half;
-    const cy = y + half;
-    let valid = true;
-    for (const pos of spawns) {
-      const d = Math.hypot(cx - (pos.x + half), cy - (pos.y + half));
-      if (d < minCenterDistClamped) {
-        valid = false;
+  while (spawns.length < count && attempts < 8000) {
+    attempts += 1;
+    const x = pad + Math.floor(Math.random() * usableW);
+    const y = pad + Math.floor(Math.random() * usableH);
+    const cx = x + boxSize / 2;
+    const cy = y + boxSize / 2;
+    let ok = true;
+    for (const p of spawns) {
+      if (Math.hypot(cx - (p.x + boxSize / 2), cy - (p.y + boxSize / 2)) < minDist) {
+        ok = false;
         break;
       }
     }
-    if (valid) spawns.push({ x, y });
-    attempts += 1;
+    if (ok) spawns.push({ x, y });
   }
 
-  if (attempts >= maxAttempts) {
-    console.warn("Could not place all squares within given constraints.");
-  }
   return spawns;
 };
 
 const BubbleContainer = React.memo(function BubbleContainer() {
   const rootRef = useRef(null);
-  const [size, setSize] = useState({ w: 480, h: 380 });
+  const [size, setSize] = useState({ w: 0, h: 0 });
 
   useLayoutEffect(() => {
     const el = rootRef.current;
-    if (!el || typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver((entries) => {
-      const cr = entries[0]?.contentRect;
-      if (!cr) return;
-      setSize({
-        w: Math.max(240, Math.floor(cr.width)),
-        h: Math.max(200, Math.floor(cr.height)),
-      });
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
+    if (!el) return;
+
+    const measure = () => {
+      const w = Math.max(240, Math.floor(el.clientWidth || el.getBoundingClientRect().width));
+      const h = Math.max(200, Math.floor(el.clientHeight || el.getBoundingClientRect().height));
+      setSize((prev) => (prev.w === w && prev.h === h ? prev : { w, h }));
+    };
+
+    measure();
+    // Second tick catches flex layout settling (skills sheet open)
+    const raf = requestAnimationFrame(measure);
+
+    let ro;
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(() => measure());
+      ro.observe(el);
+    }
+    return () => {
+      cancelAnimationFrame(raf);
+      ro?.disconnect();
+    };
   }, []);
 
   const { bubbles, frameSize } = useMemo(() => {
+    if (size.w < 40 || size.h < 40) {
+      return { bubbles: [], frameSize: 96 };
+    }
     const short = Math.min(size.w, size.h);
+    // Slightly smaller bubbles → more room to spread
     const wideEnough = size.w >= 640 && short >= 480;
-    const maxBox = wideEnough ? 176 : 130;
-    const minBox = wideEnough ? 112 : 72;
-    const divisor = wideEnough ? 4.15 : 5.5;
+    const maxBox = wideEnough ? 148 : 110;
+    const minBox = wideEnough ? 88 : 64;
+    const divisor = wideEnough ? 5.1 : 6.2;
     const box = Math.max(
       minBox,
       Math.min(maxBox, Math.floor(short / divisor))
     );
-    const spawns = generateUniqueSpawns(Name.length, size.w, size.h, box);
+    const spawns = generateSpreadSpawns(Name.length, size.w, size.h, box);
     const list = spawns.map((spawn, index) => ({
       id: index + 1,
       randomSpawn: spawn,
@@ -97,10 +126,6 @@ const BubbleContainer = React.memo(function BubbleContainer() {
     return { bubbles: list, frameSize: box };
   }, [size]);
 
-  const handleBubbleClick = (id) => {
-    console.log(`Bubble ${id} clicked!`);
-  };
-
   return (
     <div className="bubble-playfield flex h-full min-h-0 w-full max-w-full flex-col items-center justify-start overflow-hidden md:justify-center">
       <div
@@ -111,7 +136,7 @@ const BubbleContainer = React.memo(function BubbleContainer() {
           <Bubble
             key={bubble.id}
             randomSpawn={bubble.randomSpawn}
-            onBubbleClick={() => handleBubbleClick(bubble.id)}
+            onBubbleClick={() => {}}
             floatHeightX={bubble.floatHeightX}
             floatHeightY={bubble.floatHeightY}
             skillIcon={bubble.skillIcon}

@@ -7,9 +7,16 @@ import { buildUrl } from "../../../utils/urlBuilder";
 import { TextureLoader } from "three";
 import staticText from "../../content/staticText.json";
 import DinoOnFloor from "./DinoOnFloor";
+import HobbiesBoard from "./HobbiesBoard";
+import CareerTrail from "./CareerTrail";
+import { SCROLL_CHAPTERS, DESK_WORLD_Z } from "../../utils/scrollChapters";
 
-/** Hover narration only after this scroll fraction (0–1). */
+/** Hover narration only after this scroll fraction (0–1). Career mid-air uses a lower gate. */
 const NARRATION_MIN_SCROLL = 0.5;
+const CAREER_NARRATION_MIN_SCROLL = 0.06;
+
+const DESK_FADE_START = SCROLL_CHAPTERS.deskFadeStart;
+const DESK_FADE_FULL = SCROLL_CHAPTERS.deskFadeFull;
 
 /** Screen-space radius (CSS px) for narration hotspots (e.g. Toronto labels). */
 const NARRATION_HOTSPOT_RADIUS_PX = 30;
@@ -72,7 +79,13 @@ function NarrationHotspotPx({
   );
 }
 
-const Room = ({ onResumeClick, onDinoModeChange, onHoverNarration }) => {
+const Room = ({
+  onResumeClick,
+  onDinoModeChange,
+  onHoverNarration,
+  onExperienceSelect,
+  selectedStationId,
+}) => {
   const scroll = useScroll();
   const roomRootRef = useRef(null);
   const narrScrollOkRef = useRef(false);
@@ -95,7 +108,10 @@ const Room = ({ onResumeClick, onDinoModeChange, onHoverNarration }) => {
   };
 
   const showNarration = (speechKey) => {
-    if (scroll.offset < NARRATION_MIN_SCROLL) return;
+    const isCareer =
+      typeof speechKey === "string" && speechKey.startsWith("career");
+    const min = isCareer ? CAREER_NARRATION_MIN_SCROLL : NARRATION_MIN_SCROLL;
+    if (scroll.offset < min) return;
     const text = flySpeech[speechKey];
     if (!text) return;
     clearNarrationTimer();
@@ -151,8 +167,15 @@ const Room = ({ onResumeClick, onDinoModeChange, onHoverNarration }) => {
   ], [roomText]);
 
   useFrame(() => {
-    const fade = THREE.MathUtils.clamp(scroll.offset ?? 0, 0, 1);
-    const narrOk = scroll.offset >= NARRATION_MIN_SCROLL;
+    const t = THREE.MathUtils.clamp(scroll.offset ?? 0, 0, 1);
+    const fade = THREE.MathUtils.clamp(
+      (t - DESK_FADE_START) / (DESK_FADE_FULL - DESK_FADE_START),
+      0,
+      1
+    );
+    const narrOk =
+      scroll.offset >= CAREER_NARRATION_MIN_SCROLL ||
+      scroll.offset >= NARRATION_MIN_SCROLL;
     if (!narrOk && narrScrollOkRef.current) {
       clearNarrationTimer();
       onHoverNarration?.(null);
@@ -180,7 +203,8 @@ const Room = ({ onResumeClick, onDinoModeChange, onHoverNarration }) => {
   });
 
   return (
-    <group ref={roomRootRef}>
+    <>
+    <group ref={roomRootRef} position={[0, 0, DESK_WORLD_Z]}>
       <group
         position={[-4.9, -0.5, -0.9]}
         onClick={(event) => {
@@ -277,41 +301,11 @@ const Room = ({ onResumeClick, onDinoModeChange, onHoverNarration }) => {
       >
         {roomText.resumeLabel}
       </Text>
-      <group
-        position={[-4, -0.44, 1]}
-        rotation={[-Math.PI / 2, 0, -0.3]}
-        onPointerEnter={(e) => {
-          e.stopPropagation();
-          clearNarrationTimer();
-          showNarration("hobbies");
-        }}
-        onPointerOut={hideNarrationSoon}
-      >
-        <mesh position={[0, 0, 0]} rotation={[0, 0, 0]}>
-          <boxGeometry args={[1.5, 1.8, 0.01]} />
-          <meshStandardMaterial
-            args={[{ transparent: false, color: "yellow" }]}
-          />
-        </mesh>
-        <mesh position={[0, 0.05, 0.01]} rotation={[0, 0, 0]}>
-          <planeGeometry args={[1.3, 1.3]} />
-          <meshStandardMaterial
-            map={resumeTexture}
-            args={[{ transparent: true, color: "black" }]}
-          />
-        </mesh>
-        <Text
-          position={[0, -0.75, 0.02]}
-          rotation={[0, 0, 0]}
-          font={buildUrl("/fonts/child.ttf")}
-          fontSize={0.15}
-          textAlign="center"
-          color="black"
-        >
-          {roomText.hobbiesLabel}
-        </Text>
-      </group>
-      <DinoOnFloor onModeChange={onDinoModeChange} />
+      <HobbiesBoard
+        showNarration={showNarration}
+        hideNarrationSoon={hideNarrationSoon}
+        clearNarrationTimer={clearNarrationTimer}
+      />
       <mesh
         receiveShadow
         position={[0, -0.55, 0]}
@@ -349,6 +343,22 @@ const Room = ({ onResumeClick, onDinoModeChange, onHoverNarration }) => {
           ))}
       </mesh>
     </group>
+    {/* Mid-air trail — outside desk; clears before desk arc */}
+    <CareerTrail
+      showNarration={showNarration}
+      hideNarrationSoon={hideNarrationSoon}
+      clearNarrationTimer={clearNarrationTimer}
+      onStationSelect={(station) => {
+        onHoverNarration?.(null);
+        onExperienceSelect?.(station);
+      }}
+      selectedStationId={selectedStationId}
+    />
+    {/* Dino sits on the farther desk floor */}
+    <group position={[0, 0, DESK_WORLD_Z]}>
+      <DinoOnFloor onModeChange={onDinoModeChange} />
+    </group>
+    </>
   );
 };
 

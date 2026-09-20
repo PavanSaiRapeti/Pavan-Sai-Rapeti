@@ -8,8 +8,7 @@
     "lastName": "RAPETI"
   },
   "toggleButtons": [
-    { "label": "SKILLS", "value": 1 },
-    { "label": "MYSELF", "value": 2 }
+    { "label": "SKILLS", "value": 1 }
   ],
   "chatBot": {
     "defaultBotResponse": "Bot response",
@@ -26,7 +25,7 @@
     "realmScroll": {
       "toolbarLabel": "Move through the 3D room",
       "top": "Room",
-      "mid": "Mid",
+      "mid": "Career",
       "bottom": "Desk"
     }
   },
@@ -66,19 +65,143 @@
       "FULL STACK DEVELOPER"
     ],
     "footerTitle": "Designed and Developed with LOVE",
-    "description": "With Seven years of experience in the field, I've honed my skills in developing enterprise products, leading development teams, and building B2B applications. My expertise extends to a variety of industries, including manufacturing, ecommerce, and more."
+    "description": "Full Stack Developer with 6+ years building dynamic web apps in React, Next.js, Node.js, and more — from enterprise dashboards to network automation."
   },
   "dino": {
     "roarCaption": "roarrrrrr..."
+  },
+  "realmHud": {
+    "visitsLabel": "VISITS",
+    "hint": "SCROLL ▼ ENTER"
   },
   "flyGuide": {
     "speech": {
       "resumeStack": "Those papers are my résumé — click them (or the label) to open the full PDF in a window.",
       "resumeLabel": "Résumé shortcut — same as the stack: opens my CV.",
-      "hobbies": "A little board about what I do when I’m not shipping features.",
+      "hobbies": "My off-hours corkboard — hover a card to hear what each hobby means to me.",
+      "hobbyFootball": "Football — pickup games, late goals, and that post-match buzz.",
+      "hobbyTrekking": "Trekking and hiking — trails, altitude, and quiet views worth the climb.",
+      "hobbyMusic": "Singing and songwriting — melodies, drafts, and late-night voice memos.",
+      "hobbyTravel": "Travel and photography — new streets, light, and frames I want to keep.",
+      "hobbyVideo": "Digital content and video editing — cuts, pacing, and telling a short story.",
+      "hobby3d": "3D design and visualization — shapes, cameras, and one more render.",
       "about": "A short visual intro — who I am and how I like to work.",
-      "worldMap": "Where I’m based now (Toronto) and where I’m from — ask me about either."
+      "worldMap": "Where I’m based now (Toronto) and where I’m from — ask me about either.",
+      "careerTrail": "Scroll forward through every career chapter — then the camera arcs onto the desk.",
+      "careerTcs": "TCS — System Engineer. Dashboards, Three.js, mentoring, and bank-grade builds.",
+      "careerLti": "LTIMindtree — Senior Engineer. Nokia, Bekaert, MSC Direct migrations.",
+      "careerEdu": "Conestoga College — Computer Application Development in Waterloo.",
+      "careerNuvo": "Nuvo Horizons — freelance college-exploration platform for students.",
+      "careerTcp": "TCP Network Services — automation platform for 300+ network devices.",
+      "careerNow": "Available for hire — full-stack, React-heavy, ready to ship."
     }
+  },
+  "career": {
+    "title": "Career Trail",
+    "subtitle": "forged in code",
+    "panelClose": "Close",
+    "openResume": "Open full résumé",
+    "stations": [
+      {
+        "id": "tcs",
+        "year": "2020",
+        "company": "TCS",
+        "role": "System Engineer",
+        "dates": "Jan 2020 – Aug 2022",
+        "speechKey": "careerTcs",
+        "accent": "#F96E2A",
+        "summary": "Internal dashboards and CITI rate systems — React, Next.js, Three.js, and mentoring.",
+        "highlights": [
+          "Built responsive portals with React/Python — +25% customer satisfaction.",
+          "Cut post-deploy bugs 40% with stronger Jest/Enzyme coverage.",
+          "Optimized GraphQL — 40% better data efficiency, 15% faster loads.",
+          "Three.js visualizations in React; mentored 5 juniors; 20+ code reviews."
+        ],
+        "stack": ["React", "Next.js", "TypeScript", "Three.js", "C#", "ASP.NET", "GraphQL"]
+      },
+      {
+        "id": "lti",
+        "year": "2022",
+        "company": "LTIMindtree",
+        "role": "Senior Software Engineer",
+        "dates": "Aug 2022 – Mar 2024",
+        "speechKey": "careerLti",
+        "accent": "#ff9600",
+        "summary": "Led frontend work for Nokia, Bekaert, and MSC Direct — React architecture and e-commerce migration.",
+        "highlights": [
+          "Nokia digital dashboard — onboarding, A/B tests, stronger security.",
+          "Bekaert e-commerce — consistency and maintainability across the platform.",
+          "MSC Direct PHP→React migration with Node, GraphQL, and Cypress E2E.",
+          "Mentored interns and juniors while shipping production UI."
+        ],
+        "stack": ["React", "TypeScript", "Node.js", "GraphQL", "Tailwind", "Jest", "Cypress"]
+      },
+      {
+        "id": "edu",
+        "year": "2024",
+        "company": "Conestoga",
+        "role": "Computer Application Development",
+        "dates": "2024 · Waterloo, ON",
+        "speechKey": "careerEdu",
+        "accent": "#504B38",
+        "summary": "Upskilled in Canada while bridging enterprise experience into new markets.",
+        "highlights": [
+          "Computer Application Development — Conestoga College, Waterloo.",
+          "B.Tech Mechanical Engineering — GMR Institute of Technology (2019)."
+        ],
+        "stack": ["Full Stack", "Cloud", "Agile"]
+      },
+      {
+        "id": "nuvo",
+        "year": "2024",
+        "company": "Nuvo Horizons",
+        "role": "Freelance Full Stack",
+        "dates": "Aug 2024 – Dec 2024",
+        "speechKey": "careerNuvo",
+        "accent": "#5B7C6A",
+        "summary": "Student college-exploration platform — search, requirements, and applications.",
+        "highlights": [
+          "React + Java/Kotlin REST APIs for programs and admissions.",
+          "AWS, PostgreSQL, and MongoDB for registration and applications."
+        ],
+        "stack": ["React", "Java", "Kotlin", "AWS", "PostgreSQL", "MongoDB"]
+      },
+      {
+        "id": "tcp",
+        "year": "2025",
+        "company": "TCP Network",
+        "role": "Programmer",
+        "dates": "May 2025 – May 2026",
+        "speechKey": "careerTcp",
+        "accent": "#2F4F6B",
+        "summary": "TCP Automation Platform — config backups, command execution, and live topology for 300+ devices.",
+        "highlights": [
+          "Flask Blueprint REST + WebSockets — live progress for 300+ concurrent ops.",
+          "React Flow topology with drag-and-drop discovery and snapshots.",
+          "SSH/Telnet/SNMP multi-vendor connectivity via Paramiko/Netmiko.",
+          "JWT + AD/LDAP RBAC, audit trails, and PostgreSQL under high concurrency."
+        ],
+        "stack": ["Python", "Flask", "React", "PostgreSQL", "WebSockets", "Tailwind"]
+      },
+      {
+        "id": "now",
+        "year": "Now",
+        "company": "Available",
+        "role": "Full Stack Developer",
+        "dates": "Open to opportunities",
+        "speechKey": "careerNow",
+        "accent": "#F96E2A",
+        "summary": "6+ years shipping React-heavy full-stack products — ready for the next build.",
+        "highlights": [
+          "Hyderabad, India · pavansairight@gmail.com",
+          "www.pavansairapeti.com · GitHub · LinkedIn",
+          "Frontend: React, Next.js, TypeScript, Tailwind, Redux Saga.",
+          "Backend & cloud: Node, Express, PostgreSQL, MongoDB, AWS, Docker, K8s."
+        ],
+        "stack": ["React", "Next.js", "Node.js", "PostgreSQL", "AWS"],
+        "ctaResume": true
+      }
+    ]
   },
   "room": {
     "resumeLabel": "Resume",
@@ -86,15 +209,72 @@
     "resumeCloseButton": "Close",
     "resumeUrl": "/resume.pdf",
     "hobbiesLabel": "Hobbies",
+    "hobbiesNote": "off the clock",
+    "hobbies": [
+      {
+        "id": "football",
+        "title": "Football",
+        "subtitle": "on the pitch",
+        "speechKey": "hobbyFootball",
+        "photo": "#2F6B3A",
+        "accent": "#F4F1EA",
+        "icon": "ball"
+      },
+      {
+        "id": "trekking",
+        "title": "Trekking",
+        "subtitle": "trails & peaks",
+        "speechKey": "hobbyTrekking",
+        "photo": "#3D5A4C",
+        "accent": "#D8E2D0",
+        "icon": "mountain"
+      },
+      {
+        "id": "music",
+        "title": "Music",
+        "subtitle": "sing & write",
+        "speechKey": "hobbyMusic",
+        "photo": "#5C3D6E",
+        "accent": "#F0E4F7",
+        "icon": "music"
+      },
+      {
+        "id": "travel",
+        "title": "Travel",
+        "subtitle": "photo walks",
+        "speechKey": "hobbyTravel",
+        "photo": "#2F4F6B",
+        "accent": "#E4EEF5",
+        "icon": "camera"
+      },
+      {
+        "id": "video",
+        "title": "Video",
+        "subtitle": "edit & create",
+        "speechKey": "hobbyVideo",
+        "photo": "#6B3A2F",
+        "accent": "#F7E8E4",
+        "icon": "video"
+      },
+      {
+        "id": "viz3d",
+        "title": "3D Design",
+        "subtitle": "visualize",
+        "speechKey": "hobby3d",
+        "photo": "#3A4A6B",
+        "accent": "#E6EAF5",
+        "icon": "cube"
+      }
+    ],
     "fontLines": [
       "With",
-      "Seven years",
+      "Six+ years",
       "of forging",
       "in the code's fierce flame,",
       "I build robust solutions",
       "where power meets the",
       "game.",
-      "Currently in ",
+      "worked in ",
       "Toronto, ON, CA",
       "born in",
       "India"

@@ -1,4 +1,5 @@
 import { useFrame, useLoader } from "@react-three/fiber";
+import { useScroll } from "@react-three/drei/web/ScrollControls";
 import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import {
@@ -11,6 +12,7 @@ import dinoDeadUrl from "../../assests/dino dead.png";
 import dinoRoarUrl from "../../assests/dino roar.png";
 import dinoJumpUrl from "../../assests/dino jump.png";
 import trexRoarAudioUrl from "../../assests/audio/trexaudio.mp3";
+import { SCROLL_CHAPTERS } from "../../utils/scrollChapters";
 
 const trexRoarSrc = trexRoarAudioUrl?.src || trexRoarAudioUrl;
 
@@ -59,21 +61,34 @@ const DINO_ON_FLOOR_CONFIG = {
     jumpKey: " ",
   },
   walk: {
-    radiusWorldUnits: 6,
+    radiusWorldUnits: 1.15,
   },
   size: {
-    planeWidth: 5 * 0.5 * 0.5,
-    planeHeight: 1.8 * 0.5 * 0.5 * 2.15,
+    planeWidth: 5 * 0.5 * 0.5 * 0.65,
+    planeHeight: 1.8 * 0.5 * 0.5 * 2.15 * 0.65,
   },
+  /**
+   * Rests on the desk floor at the bottom of the top-down view (still on-lens).
+   * Enters only after the desk is fully on screen.
+   */
   placement: {
-    positionX: 0,
-    positionY: -0.034,
-    positionZ: 2.85,
+    positionX: 0.35,
+    /** Sit on the floor plane (desk floor ≈ -0.5; sprite center slightly above) */
+    positionY: -0.48,
+    /** Bottom of frustum; keep < ~3.2 so it stays on screen at desk cam */
+    positionZ: 2.55,
+  },
+  enter: {
+    /** Desk must be fully on screen first */
+    scrollUnlock: SCROLL_CHAPTERS.dinoUnlock,
+    /** Start just past the bottom edge, then walk onto screen */
+    startZ: 3.55,
+    enterSeconds: 1.15,
   },
   /** World Y added on phones (`body[data-mobile="1"]`) so the dino sits above the bottom safe area */
   mobile: {
-    yLift: 0.44,
-    zNudge: -1.00,
+    yLift: 0.12,
+    zNudge: -0.15,
   },
   /**
    * Checker key: light grey = `sat` + `lum > minLuminance`. Dark checker tiles need `keyDarkChecker` + RGB spread.
@@ -219,6 +234,7 @@ function setAtlasFrame(map, frameIndex, atlasStrip) {
 
 export default function DinoOnFloor({ onModeChange }) {
   const cfg = DINO_ON_FLOOR_CONFIG;
+  const scroll = useScroll();
   const isBodyMobile = usePortfolioBodyMobile();
   const prevReportedModeRef = useRef(null);
   const runPath = dinoRunningUrl?.src || dinoRunningUrl;
@@ -233,8 +249,9 @@ export default function DinoOnFloor({ onModeChange }) {
   ]);
 
   const groupRef = useRef(null);
-  /** Base Y/Z (includes mobile lift); X is driven by walk in useFrame */
-  const dinoBaseYzRef = useRef({ y: 0, z: 0 });
+  /** Base Y (includes mobile lift); X/Z driven in useFrame */
+  const dinoBaseYRef = useRef(0);
+  const enterProgressRef = useRef(0);
   const materialRef = useRef(null);
   const timeRef = useRef(0);
   const deadTimeRef = useRef(0);
@@ -263,11 +280,12 @@ export default function DinoOnFloor({ onModeChange }) {
     roarFrames / cfg.animation.roarFramesPerSecond
   );
 
-  const { placement, size, material, mobile: mobileAdjust } = cfg;
+  const { placement, size, material, mobile: mobileAdjust, enter } = cfg;
   const yLift = isBodyMobile ? mobileAdjust?.yLift ?? 0 : 0;
   const zNudge = isBodyMobile ? mobileAdjust?.zNudge ?? 0 : 0;
-  dinoBaseYzRef.current.y = placement.positionY + yLift;
-  dinoBaseYzRef.current.z = placement.positionZ + zNudge;
+  dinoBaseYRef.current = placement.positionY + yLift;
+  const restZ = placement.positionZ + zNudge;
+  const startZ = (enter?.startZ ?? restZ + 2) + zNudge;
 
   useEffect(() => {
     let cancelled = false;
@@ -392,10 +410,43 @@ export default function DinoOnFloor({ onModeChange }) {
   }, [cfg.input.jumpKey, jumpMap, atlasJump]);
 
   useFrame((_, delta) => {
-    const mode = modeRef.current;
+    const group = groupRef.current;
     const mat = materialRef.current;
-    if (!mat) return;
+    if (!group || !mat) return;
 
+    const t = scroll.offset ?? 0;
+    const unlocked = t >= (enter?.scrollUnlock ?? 0.92);
+
+    if (!unlocked) {
+      enterProgressRef.current = 0;
+      group.visible = false;
+      mat.opacity = 0;
+      mat.transparent = true;
+      return;
+    }
+
+    const enterSec = Math.max(0.35, enter?.enterSeconds ?? 1.15);
+    enterProgressRef.current = Math.min(
+      1,
+      enterProgressRef.current + delta / enterSec
+    );
+    const p = enterProgressRef.current;
+    const ease = 1 - (1 - p) * (1 - p);
+    const z = THREE.MathUtils.lerp(startZ, restZ, ease);
+
+    group.visible = true;
+    group.position.y = dinoBaseYRef.current;
+    group.position.z = z;
+    mat.transparent = true;
+    mat.opacity = ease;
+
+    // Hold animation/walk until mostly on screen
+    if (p < 0.55) {
+      group.position.x = placement.positionX;
+      return;
+    }
+
+    const mode = modeRef.current;
     const alpha = cfg.material.alphaTest;
 
     if (mode === "run") {
@@ -426,10 +477,8 @@ export default function DinoOnFloor({ onModeChange }) {
       const phase = timeRef.current * cfg.animation.walkPhaseSpeed;
       const x = Math.sin(phase) * cfg.walk.radiusWorldUnits;
       const facing = Math.cos(phase) >= 0 ? 1 : -1;
-      if (groupRef.current) {
-        groupRef.current.position.x = x;
-        groupRef.current.scale.set(facing, 1, 1);
-      }
+      group.position.x = x;
+      group.scale.set(facing, 1, 1);
       return;
     }
 
@@ -536,12 +585,9 @@ export default function DinoOnFloor({ onModeChange }) {
   return (
     <group
       ref={groupRef}
-      position={[
-        placement.positionX,
-        placement.positionY + yLift,
-        placement.positionZ + zNudge,
-      ]}
+      position={[placement.positionX, placement.positionY + yLift, startZ]}
       scale={[1, 1, 1]}
+      visible={false}
     >
       <mesh
         rotation={[-Math.PI / 2, 0, 0]}
@@ -553,6 +599,7 @@ export default function DinoOnFloor({ onModeChange }) {
           ref={materialRef}
           map={runMap}
           transparent
+          opacity={0}
           alphaTest={material.alphaTest}
           depthWrite={material.depthWrite}
           toneMapped={material.toneMapped}

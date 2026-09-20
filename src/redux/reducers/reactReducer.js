@@ -3,7 +3,7 @@ import { SET_CURRENT_INDEX } from "../actions/types";
 
 
 const initialState = {
-    currentIndex: 2,
+    currentIndex: 0,
 };
 
 

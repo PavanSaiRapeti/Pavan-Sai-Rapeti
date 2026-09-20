@@ -1,5 +1,5 @@
-import { Canvas } from "@react-three/fiber";
-import { ScrollControls } from "@react-three/drei/web/ScrollControls";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { ScrollControls, useScroll } from "@react-three/drei/web/ScrollControls";
 import { OrbitControls } from "@react-three/drei/core/OrbitControls";
 import CameraRig from "../common/CameraRig";
 import DummyCamera from "../common/DummyCamera";
@@ -7,8 +7,11 @@ import Room from "../common/Room";
 import PaperAnm from "../common/PaperAnm";
 import { useCallback, useEffect, useRef, useState } from "react";
 import ScrollBlink from "../common/ScrollBlink";
+import ProfileVisitHud from "../common/ProfileVisitHud";
+import RealmHeroCopy from "../common/RealmHeroCopy";
 import { useSelector } from "react-redux";
 import Overlay from "../reactComponent/Overlay";
+import MyCanva from "../reactComponent/layout/MyCanva";
 import staticText from "../../content/staticText.json";
 import flyCursorUrl from "../../assests/fly animation.png";
 import kickCursorUrl from "../../assests/kick.jpg";
@@ -17,6 +20,7 @@ import AssetLoadBridge from "./AssetLoadBridge";
 import ScrollControlsMobileFix from "./ScrollControlsMobileFix";
 import MobileRealmScrollUI from "../MobileRealmScrollUI";
 import { RealmCursorContext } from "../../context/RealmCursorContext";
+import { SCROLL_CHAPTERS } from "../../utils/scrollChapters";
 
 const flyCursorSrc = flyCursorUrl?.src || flyCursorUrl;
 const kickCursorSrc = kickCursorUrl?.src || kickCursorUrl;
@@ -43,12 +47,35 @@ const KICK_CURSOR_STRIP = {
   keyDarkChecker: false,
 };
 
-const FLY_CURSOR_HOTSPOT = { x: 14, y: 12 };
-const FLY_CURSOR_HEIGHT_PX = 120;
-const KICK_CURSOR_HEIGHT_PX = 100;
+const FLY_CURSOR_HOTSPOT = { x: 8, y: 7 };
+const FLY_CURSOR_HEIGHT_PX = 72;
+const KICK_CURSOR_HEIGHT_PX = 60;
+
+/** Sync DOM overlays to scroll chapters (hero + visits). */
+function ScrollOverlayGate({ onHero, onVisits }) {
+  const scroll = useScroll();
+  const lastHero = useRef(null);
+  const lastVisits = useRef(null);
+  useFrame(() => {
+    const t = scroll.offset ?? 0;
+    // Drop hero on the first bit of scroll (not after a long 2% of 12 pages)
+    const hero = t < 0.004;
+    const visits = t < SCROLL_CHAPTERS.posterFlyOffEnd;
+    if (lastHero.current !== hero) {
+      lastHero.current = hero;
+      onHero(hero);
+    }
+    if (lastVisits.current !== visits) {
+      lastVisits.current = visits;
+      onVisits(visits);
+    }
+  });
+  return null;
+}
 
 export default function Scene({ onAssetsLoaded }) {
   const [showResume, setShowResume] = useState(false);
+  const [activeExperience, setActiveExperience] = useState(null);
   const [dinoMode, setDinoMode] = useState("run");
   const [cursorInRoom, setCursorInRoom] = useState(false);
   const cursorInRoomRef = useRef(false);
@@ -59,9 +86,13 @@ export default function Scene({ onAssetsLoaded }) {
   const [kickFrame, setKickFrame] = useState(0);
   const [kickSpriteRatio, setKickSpriteRatio] = useState(0.5);
   const [kickDisplaySrc, setKickDisplaySrc] = useState(kickCursorSrc);
+  const [showVisitHud, setShowVisitHud] = useState(true);
+  const [showHeroCopy, setShowHeroCopy] = useState(true);
   const kickLockRef = useRef(false);
   const kickTimersRef = useRef([]);
   const isScroll = useSelector((state) => state.camera.isScroll);
+  const currentIndex = useSelector((state) => state.react.currentIndex);
+  const skillsOpen = currentIndex === 1;
   const resumeUrl = process.env.NEXT_PUBLIC_RESUME_URL || staticText.room.resumeUrl;
 
   const realmFlagsRef = useRef({ textures: false, fonts: false, cursor: false });
@@ -192,7 +223,7 @@ export default function Scene({ onAssetsLoaded }) {
 
   /** Skills bubbles sit above the canvas; room surface mouseleave was hiding the fly sprite. Track at window level. */
   useEffect(() => {
-    if (showResume) {
+    if (showResume || activeExperience) {
       setRoomCursor(false);
       return;
     }
@@ -207,10 +238,11 @@ export default function Scene({ onAssetsLoaded }) {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("blur", onBlur);
     };
-  }, [showResume, moveFlyCursor]);
+  }, [showResume, activeExperience, moveFlyCursor]);
 
-  const useFlyCursor = cursorInRoom && !showResume;
+  const useFlyCursor = cursorInRoom && !showResume && !activeExperience;
   const roomCursor = useFlyCursor ? "none" : "default";
+  const careerCopy = staticText.career ?? {};
 
   const setRoomCursor = (active) => {
     cursorInRoomRef.current = active;
@@ -226,14 +258,21 @@ export default function Scene({ onAssetsLoaded }) {
           pingAssetsLoaded();
         }}
       />
-      <div className="absolute scene-overlay-safe pointer-events-none z-10">
+      <div className="absolute scene-overlay-safe pointer-events-none z-[50]">
         <Overlay />
       </div>
+      {skillsOpen ? (
+        <div className="skills-sheet" role="dialog" aria-label="Skills">
+          <div className="skills-sheet__inner">
+            <MyCanva />
+          </div>
+        </div>
+      ) : null}
       <div
         className="scene-room-surface absolute inset-0 z-0 h-full w-full min-h-0"
         onPointerDown={(e) => {
           if (e.pointerType === "mouse" && e.button !== 0) return;
-          if (showResume) return;
+          if (showResume || activeExperience) return;
           if (!cursorInRoomRef.current) return;
           moveFlyCursor(e.clientX, e.clientY);
           playKick();
@@ -246,25 +285,34 @@ export default function Scene({ onAssetsLoaded }) {
           style={{ background: "#FBF8EF", overflow: "hidden", cursor: roomCursor }}
           className="threejs-container h-full w-full"
         >
-          <ScrollControls pages={2} style={{ left: "var(--scene-scroll-left, 15px)" }}>
+          <ScrollControls pages={12} damping={0.62} style={{ left: "var(--scene-scroll-left, 15px)" }}>
             <ScrollControlsMobileFix />
+            <ScrollOverlayGate onHero={setShowHeroCopy} onVisits={setShowVisitHud} />
             <Room
               onResumeClick={() => {
                 setHoverNarration(null);
+                setActiveExperience(null);
                 setShowResume(true);
               }}
               onDinoModeChange={setDinoMode}
               onHoverNarration={setHoverNarration}
+              onExperienceSelect={setActiveExperience}
+              selectedStationId={activeExperience?.id ?? null}
             />
             <DummyCamera isDefaultCamera={false} />
             <CameraRig isDefaultCamera={true} />
             <PaperAnm />
             <directionalLight position={[5, 10, 5]} intensity={1} />
-            <OrbitControls enableZoom={false} enablePan={false} enableDamping={false} />
+            <OrbitControls
+              enabled={false}
+              enableZoom={false}
+              enablePan={false}
+              enableDamping={false}
+            />
           </ScrollControls>
         </Canvas>
       </div>
-      {hoverNarration && !showResume ? (
+      {hoverNarration && !showResume && !activeExperience ? (
         <div
           className="pointer-events-none fixed inset-0 z-[65] flex items-center justify-center px-6"
           aria-live="polite"
@@ -276,6 +324,55 @@ export default function Scene({ onAssetsLoaded }) {
             <p className="text-lg leading-relaxed text-[#222] md:text-xl">
               {hoverNarration}
             </p>
+          </div>
+        </div>
+      ) : null}
+      {activeExperience && !showResume ? (
+        <div className="career-experience-overlay">
+          <div
+            className="career-experience-panel"
+            style={{ ["--career-accent"]: activeExperience.accent || "#F96E2A" }}
+          >
+            <div className="career-experience-panel__head">
+              <div>
+                <p className="career-experience-panel__year">{activeExperience.year}</p>
+                <h2 className="career-experience-panel__company">{activeExperience.company}</h2>
+                <p className="career-experience-panel__role">{activeExperience.role}</p>
+                <p className="career-experience-panel__dates">{activeExperience.dates}</p>
+              </div>
+              <button
+                type="button"
+                className="career-experience-panel__close"
+                onClick={() => setActiveExperience(null)}
+              >
+                {careerCopy.panelClose ?? "Close"}
+              </button>
+            </div>
+            <p className="career-experience-panel__summary">{activeExperience.summary}</p>
+            <ul className="career-experience-panel__list">
+              {(activeExperience.highlights ?? []).map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+            <div className="career-experience-panel__stack">
+              {(activeExperience.stack ?? []).map((tech) => (
+                <span key={tech} className="career-experience-panel__chip">
+                  {tech}
+                </span>
+              ))}
+            </div>
+            {activeExperience.ctaResume ? (
+              <button
+                type="button"
+                className="career-experience-panel__cta"
+                onClick={() => {
+                  setActiveExperience(null);
+                  setShowResume(true);
+                }}
+              >
+                {careerCopy.openResume ?? "Open full résumé"}
+              </button>
+            ) : null}
           </div>
         </div>
       ) : null}
@@ -314,6 +411,16 @@ export default function Scene({ onAssetsLoaded }) {
         </div>
       ) : null}
       {!isScroll ? <ScrollBlink /> : ""}
+      <RealmHeroCopy
+        visible={
+          showHeroCopy && !showResume && !activeExperience && !skillsOpen
+        }
+      />
+      <ProfileVisitHud
+        visible={
+          showVisitHud && !showResume && !activeExperience && !skillsOpen
+        }
+      />
       {dinoMode === "roar" ? (
         <div
           className="pointer-events-none absolute bottom-28 left-1/2 z-[25] -translate-x-1/2 text-center text-black"

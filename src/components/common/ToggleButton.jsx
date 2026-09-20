@@ -4,34 +4,40 @@ import { useDispatch, useSelector } from "react-redux";
 import { setCurrentIndex } from "../../redux/actions/reactActions";
 import staticText from "../../content/staticText.json";
 
+/** Corner dock — Skills only. */
 export const ToggleButton = () => {
   const dispatch = useDispatch();
-  const {currentIndex} = useSelector((state) => state.react);
-  const {isScroll} = useSelector((state) => state.camera);
-
+  const { currentIndex } = useSelector((state) => state.react);
+  const { isScroll } = useSelector((state) => state.camera);
   const buttons = staticText.toggleButtons;
 
   useEffect(() => {
-    if(isScroll){
-      dispatch(setCurrentIndex(5));
-    }else{
-      dispatch(setCurrentIndex(2));
+    if (isScroll && currentIndex === 1) {
+      dispatch(setCurrentIndex(0));
     }
-  }, [isScroll]);
+  }, [isScroll, currentIndex, dispatch]);
+
+  const onPick = (value) => {
+    if (currentIndex === value) {
+      dispatch(setCurrentIndex(0));
+      return;
+    }
+    dispatch(setCurrentIndex(value));
+  };
 
   return (
-    <div className="flex rounded-full p-1">
+    <div className="realm-nav-dock__inner" role="navigation" aria-label="Sections">
       {buttons.map((button) => (
         <button
           key={button.value}
-          className={`flex-1 py-2 px-4 rounded-full transition-colors font-fontbutton text-[1.3rem]`}
-          onClick={() => dispatch(setCurrentIndex(button.value))}
+          type="button"
+          className={`realm-nav-dock__btn${
+            currentIndex === button.value ? " realm-nav-dock__btn--active" : ""
+          }`}
+          onClick={() => onPick(button.value)}
         >
-          <div className="flex flex-col ">
-            {button.label}
-            <br />
-            {currentIndex === button.value ? <ActiveIndicator /> : null}
-          </div>
+          <span>{button.label}</span>
+          {currentIndex === button.value ? <ActiveIndicator /> : null}
         </button>
       ))}
     </div>
