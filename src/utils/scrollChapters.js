@@ -24,12 +24,15 @@ export const SCROLL_CHAPTERS = {
 };
 
 export const DESK_WORLD_Z = -5.85;
+/** Shift desk contents left in the top-down view */
+export const DESK_WORLD_X = -1.4;
 
 export const CAMERA_KEYS = {
   entrance: { x: 0, y: 2.05, z: 10.55, rotX: 0 },
   throughPoster: { x: 0, y: 2.06, z: 9.35, rotX: 0 },
   careerEnd: { x: 0, y: 2.1, z: -0.4, rotX: 0 },
-  desk: { x: 0, y: 7.6, z: DESK_WORLD_Z - 0.15, rotX: -Math.PI / 2 },
+  /** Slightly higher = pulled back from the desk surface */
+  desk: { x: 0, y: 8.35, z: DESK_WORLD_Z - 0.15, rotX: -Math.PI / 2 },
 };
 
 export const CAREER_CAMERA = {

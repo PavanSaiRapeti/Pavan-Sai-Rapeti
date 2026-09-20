@@ -9,7 +9,7 @@ import {
   drawableDimensions,
   subscribeDrawableReady,
 } from "../../utils/spriteMosaicStrip";
-import { SCROLL_CHAPTERS, DESK_WORLD_Z } from "../../utils/scrollChapters";
+import { SCROLL_CHAPTERS, DESK_WORLD_Z, DESK_WORLD_X } from "../../utils/scrollChapters";
 
 const MAILBOX_HEIGHT = 1.15;
 const MAILBOX_SRC = "/images/mailbox.png?v=2";
@@ -114,7 +114,7 @@ export default function DeskMailbox({ onClick }) {
   return (
     <group
       ref={rootRef}
-      position={[6.85, -0.5, DESK_WORLD_Z + 3.2]}
+      position={[DESK_WORLD_X + 6.85, -0.5, DESK_WORLD_Z + 3.2]}
       visible={false}
     >
       <group

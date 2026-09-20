@@ -394,6 +394,16 @@ export default function DinoOnFloor({ onModeChange }) {
   useEffect(() => {
     const onKeyDown = (e) => {
       if (e.key !== cfg.input.jumpKey) return;
+      const t = e.target;
+      if (
+        t instanceof HTMLElement &&
+        (t.tagName === "INPUT" ||
+          t.tagName === "TEXTAREA" ||
+          t.tagName === "SELECT" ||
+          t.isContentEditable)
+      ) {
+        return;
+      }
       if (modeRef.current === "dead") return;
       e.preventDefault();
       if (modeRef.current === "jump") return;

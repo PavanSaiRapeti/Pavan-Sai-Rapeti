@@ -5,11 +5,13 @@ import { REALM_SCROLL_SET_EVENT } from "../../utils/realmScrollBus";
 
 /**
  * Touch-friendly ScrollControls: iOS overflow + swipe pan on the scene surface.
+ * Also keeps scroll offset stable across resize / fullscreen so the desk doesn’t jump.
  */
 export default function ScrollControlsMobileFix() {
   const scrollState = useScroll();
   const { invalidate, gl } = useThree();
   const touchRef = useRef({ y: 0, active: false });
+  const offsetRef = useRef(0);
 
   useEffect(() => {
     const el = scrollState?.el;
@@ -21,14 +23,37 @@ export default function ScrollControlsMobileFix() {
       el.style.webkitOverflowScrolling = "touch";
     }
 
+    const readOffset = () => {
+      const max = el.scrollHeight - el.clientHeight;
+      if (max <= 1) return offsetRef.current;
+      return el.scrollTop / max;
+    };
+
     const applyTarget = (t) => {
       const max = el.scrollHeight - el.clientHeight;
       if (max <= 1) return;
       const clamped = Math.min(1, Math.max(0, t));
+      offsetRef.current = clamped;
       el.scrollTop = clamped * max;
       if (scrollState.scroll) scrollState.scroll.current = clamped;
       invalidate();
     };
+
+    offsetRef.current = readOffset();
+
+    const onScroll = () => {
+      offsetRef.current = readOffset();
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+
+    const restoreOffset = () => {
+      // After layout height changes (fullscreen), re-apply the same fraction.
+      requestAnimationFrame(() => applyTarget(offsetRef.current));
+    };
+    window.addEventListener("resize", restoreOffset);
+    window.visualViewport?.addEventListener("resize", restoreOffset);
+    document.addEventListener("fullscreenchange", restoreOffset);
+    document.addEventListener("webkitfullscreenchange", restoreOffset);
 
     const onBus = (e) => {
       applyTarget(e.detail?.t ?? 0);
@@ -53,8 +78,10 @@ export default function ScrollControlsMobileFix() {
       const max = el.scrollHeight - el.clientHeight;
       if (max > 1) {
         el.scrollTop += dy * 1.35;
+        const next = el.scrollTop / max;
+        offsetRef.current = next;
         if (scrollState.scroll) {
-          scrollState.scroll.current = el.scrollTop / max;
+          scrollState.scroll.current = next;
         }
         invalidate();
       }
@@ -77,6 +104,11 @@ export default function ScrollControlsMobileFix() {
     });
 
     return () => {
+      el.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", restoreOffset);
+      window.visualViewport?.removeEventListener("resize", restoreOffset);
+      document.removeEventListener("fullscreenchange", restoreOffset);
+      document.removeEventListener("webkitfullscreenchange", restoreOffset);
       window.removeEventListener(REALM_SCROLL_SET_EVENT, onBus);
       targets.forEach((node) => {
         node.removeEventListener("touchstart", onTouchStart);

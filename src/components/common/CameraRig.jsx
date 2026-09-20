@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { PerspectiveCamera } from "@react-three/drei/core/PerspectiveCamera";
 import { useScroll } from "@react-three/drei/web/ScrollControls";
 import * as THREE from "three";
@@ -11,12 +11,16 @@ import {
   sampleCameraAtScroll,
 } from "../../utils/scrollChapters";
 
+/** Desk framing was tuned at ~16:9; keep that horizontal span on resize/fullscreen. */
+const DESK_REF_ASPECT = 16 / 9;
+
 /**
  * Scroll camera — tracks offset tightly both ways (forward + reverse).
  */
 const CameraRig = ({ isDefaultCamera }) => {
   const scroll = useScroll();
   const cameraRef = useRef();
+  const { size } = useThree();
   const dispatch = useDispatch();
   const { isScroll, isScrollToBtm } = useSelector((state) => state.camera);
   const smoothT = useRef(0);
@@ -51,7 +55,22 @@ const CameraRig = ({ isDefaultCamera }) => {
     }
 
     const sample = sampleCameraAtScroll(t);
-    targetPosition.current.set(sample.x, sample.y, sample.z);
+    let y = sample.y;
+    // Top-down desk: vertical FOV + taller fullscreen shrinks world-X → feels like a left zoom.
+    // Scale height so horizontal coverage stays matched to the reference aspect.
+    if (t > SCROLL_CHAPTERS.deskFadeStart) {
+      const aspect = size.height > 0 ? size.width / size.height : DESK_REF_ASPECT;
+      const deskBlend =
+        (t - SCROLL_CHAPTERS.deskFadeStart) /
+        Math.max(0.001, 1 - SCROLL_CHAPTERS.deskFadeStart);
+      const aspectScale = THREE.MathUtils.clamp(
+        DESK_REF_ASPECT / Math.max(aspect, 0.5),
+        0.85,
+        1.35
+      );
+      y = sample.y * THREE.MathUtils.lerp(1, aspectScale, easeDesk(deskBlend));
+    }
+    targetPosition.current.set(sample.x, y, sample.z);
     targetRotX.current = sample.rotX;
 
     const cam = cameraRef.current;
@@ -82,5 +101,10 @@ const CameraRig = ({ isDefaultCamera }) => {
     />
   );
 };
+
+function easeDesk(u) {
+  const x = u < 0 ? 0 : u > 1 ? 1 : u;
+  return x * x * (3 - 2 * x);
+}
 
 export default CameraRig;

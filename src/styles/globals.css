@@ -933,13 +933,12 @@ body[data-mobile-landscape="1"] .realm-visit-hud__count {
 }
 
 .realm-hero-copy__im {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Helvetica, Arial, sans-serif;
-  font-size: clamp(0.95rem, 2vw, 1.15rem);
-  font-weight: 500;
-  letter-spacing: 0.02em;
+  font-family: logo, ui-monospace, monospace;
+  font-size: clamp(0.95rem, 2vw, 1.2rem);
+  font-weight: 400;
+  letter-spacing: 0.06em;
   text-transform: none;
-  color: #5c5348;
+  color: #6b5a40;
 }
 
 .realm-hero-copy__role-slot {
@@ -983,11 +982,10 @@ body[data-mobile-landscape="1"] .realm-visit-hud__count {
 
 .realm-hero-copy__lede {
   margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Helvetica, Arial, sans-serif;
-  font-size: clamp(0.95rem, 1.7vw, 1.125rem);
+  font-family: primary, sans-serif;
+  font-size: clamp(0.95rem, 1.7vw, 1.15rem);
   font-weight: 400;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
   line-height: 1.55;
   color: #3d372f;
   max-width: 34rem;
@@ -995,11 +993,10 @@ body[data-mobile-landscape="1"] .realm-visit-hud__count {
 
 .realm-hero-copy__eyebrow {
   margin: 0.65rem 0 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Helvetica, Arial, sans-serif;
-  font-size: clamp(0.9rem, 1.55vw, 1.05rem);
+  font-family: primary, sans-serif;
+  font-size: clamp(0.85rem, 1.5vw, 1rem);
   font-weight: 600;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.04em;
   text-transform: none;
   color: #2a6b3f;
   background: none;

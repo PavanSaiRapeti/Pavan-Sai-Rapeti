@@ -10,7 +10,7 @@ import DinoOnFloor from "./DinoOnFloor";
 import DeskMailbox from "./DeskMailbox";
 import HobbiesBoard from "./HobbiesBoard";
 import CareerTrail from "./CareerTrail";
-import { SCROLL_CHAPTERS, DESK_WORLD_Z } from "../../utils/scrollChapters";
+import { SCROLL_CHAPTERS, DESK_WORLD_Z, DESK_WORLD_X } from "../../utils/scrollChapters";
 
 /** Hover narration only after this scroll fraction (0–1). Career mid-air uses a lower gate. */
 const NARRATION_MIN_SCROLL = 0.5;
@@ -206,7 +206,7 @@ const Room = ({
 
   return (
     <>
-    <group ref={roomRootRef} position={[0, 0, DESK_WORLD_Z]}>
+    <group ref={roomRootRef} position={[DESK_WORLD_X, 0, DESK_WORLD_Z]}>
       <group
         position={[-4.9, -0.5, -0.9]}
         onClick={(event) => {
@@ -359,7 +359,7 @@ const Room = ({
     {/* Mailbox faces the screen — not planted on the desk floor */}
     <DeskMailbox onClick={() => onMailboxClick?.()} />
     {/* Dino sits on the farther desk floor */}
-    <group position={[0, 0, DESK_WORLD_Z]}>
+    <group position={[DESK_WORLD_X, 0, DESK_WORLD_Z]}>
       <DinoOnFloor onModeChange={onDinoModeChange} />
     </group>
     </>

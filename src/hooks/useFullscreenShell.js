@@ -14,9 +14,6 @@ export default function useFullscreenShell() {
       const vv = window.visualViewport;
       const h = Math.round(vv?.height || window.innerHeight);
       root.style.setProperty("--app-height", `${h}px`);
-      if (window.scrollY === 0 && h < window.outerHeight) {
-        window.scrollTo(0, 1);
-      }
     };
 
     setAppHeight();
