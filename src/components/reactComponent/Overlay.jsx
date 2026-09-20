@@ -3,6 +3,10 @@ import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
 import { setCurrentIndex } from "../../redux/actions/reactActions";
 import staticText from "../../content/staticText.json";
+import {
+  getFullscreenElement,
+  toggleDocumentFullscreen,
+} from "../../hooks/useFullscreenShell";
 
 const COUNT_KEY = "ps-realm-profile-visits";
 const VISITOR_KEY = "ps-realm-visitor-id";
@@ -66,6 +70,19 @@ const Overlay = ({ heroVisible = false }) => {
   const menu = staticText.gameMenu ?? {};
   const skillsOpen = currentIndex === 1;
   const [visits, setVisits] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return undefined;
+    const sync = () => setIsFullscreen(Boolean(getFullscreenElement()));
+    sync();
+    document.addEventListener("fullscreenchange", sync);
+    document.addEventListener("webkitfullscreenchange", sync);
+    return () => {
+      document.removeEventListener("fullscreenchange", sync);
+      document.removeEventListener("webkitfullscreenchange", sync);
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -188,6 +205,55 @@ const Overlay = ({ heroVisible = false }) => {
           </div>
         </div>
       </div>
+
+      <button
+        type="button"
+        className={`realm-fullscreen-btn pointer-events-auto${
+          isFullscreen ? " realm-fullscreen-btn--active" : ""
+        }`}
+        onClick={() => {
+          toggleDocumentFullscreen().then((on) => setIsFullscreen(on));
+        }}
+        aria-pressed={isFullscreen}
+        aria-label={
+          isFullscreen
+            ? staticText.realmHud?.exitFullscreen ?? "Exit full screen"
+            : staticText.realmHud?.enterFullscreen ?? "Enter full screen"
+        }
+        title={
+          isFullscreen
+            ? staticText.realmHud?.exitFullscreen ?? "Exit full screen"
+            : staticText.realmHud?.enterFullscreen ?? "Full screen"
+        }
+      >
+        {isFullscreen ? (
+          <svg
+            className="realm-fullscreen-btn__icon"
+            viewBox="0 0 24 24"
+            width="22"
+            height="22"
+            aria-hidden
+          >
+            <path
+              fill="currentColor"
+              d="M8 3v3H5v2h5V3H8zm6 0v5h5V6h-3V3h-2zM5 16h3v3h2v-5H5v2zm11 0v5h2v-3h3v-2h-5z"
+            />
+          </svg>
+        ) : (
+          <svg
+            className="realm-fullscreen-btn__icon"
+            viewBox="0 0 24 24"
+            width="22"
+            height="22"
+            aria-hidden
+          >
+            <path
+              fill="currentColor"
+              d="M3 3h7v2H5v5H3V3zm11 0h7v7h-2V5h-5V3zM3 14h2v5h5v2H3v-7zm16 0h2v7h-7v-2h5v-5z"
+            />
+          </svg>
+        )}
+      </button>
     </div>
   );
 };

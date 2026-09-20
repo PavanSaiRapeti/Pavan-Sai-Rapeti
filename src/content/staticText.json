@@ -62,7 +62,7 @@
     ]
   },
   "statusDisplay": {
-    "availabilityLabel": "status : available for hire",
+    "availabilityLabel": "Available for hire",
     "introPrefix": "I'm",
     "roles": [
       "FRONT-END DEVELOPER",
@@ -71,14 +71,16 @@
       "FULL STACK DEVELOPER"
     ],
     "footerTitle": "Designed and Developed with LOVE",
-    "description": "6+ years shipping React, Next.js, and Node apps — from enterprise dashboards to network automation."
+    "description": "6+ years building scalable React, Next.js, and Node platforms — dashboards, e-commerce, and network automation."
   },
   "dino": {
     "roarCaption": "roarrrrrr..."
   },
   "realmHud": {
     "visitsLabel": "VISIT",
-    "hint": "SCROLL ▼ ENTER"
+    "hint": "SCROLL ▼ ENTER",
+    "enterFullscreen": "Full screen",
+    "exitFullscreen": "Exit full screen"
   },
   "mailbox": {
     "eyebrow": "DESK · MAILBOX",
@@ -187,7 +189,7 @@
         "id": "nuvo",
         "year": "2024",
         "company": "Nuvo Horizons",
-        "role": "Freelance Full Stack",
+        "role": "Freelance Developer",
         "dates": "Aug 2024 – Dec 2024",
         "speechKey": "careerNuvo",
         "accent": "#5B7C6A",

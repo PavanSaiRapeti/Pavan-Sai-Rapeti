@@ -1,44 +1,66 @@
 /**
- * ATS-oriented résumé content (sourced from PavanSaiRapeti_FullStackDeveloper_Resume 1.docx).
- * Phone omitted by request.
+ * ATS-oriented résumé content (sourced from Pavan_Rapeti_Resume.docx / .pdf).
  */
 
 export const resumeMeta = {
   fullName: "Pavan Sai Rapeti",
   headline: "Full Stack Developer",
-  location: "Mississauga, Ontario, Canada",
-  email: "pavansairapeti28@gmail.com",
+  location: "Hyderabad, India",
+  email: "pavansairight@gmail.com",
   website: "https://www.pavansairapeti.com",
   websiteLabel: "www.pavansairapeti.com",
   githubUrl: "https://github.com/PavanSaiRapeti",
+  githubLabel: "GitHub",
   linkedinUrl: "https://www.linkedin.com/in/pavanrapeti",
+  linkedinLabel: "LinkedIn",
+  get socialLabels() {
+    return [this.githubLabel, this.linkedinLabel];
+  },
 };
 
-export const summary = `Full Stack Developer with 6+ years of hands-on experience in building dynamic and responsive web applications using React.js, Next.js, Tailwind CSS, PostgreSQL, Express.js, and Node.js, C#, ASP.NET. Passionate about delivering exceptional customer experiences through innovative and efficient solutions. Technical expertise, combined with creativity and a commitment to quality, enables effective contribution to any development team. Eager to apply full-stack experience to drive success in cutting-edge projects.`;
+export const summary = `Full Stack Developer with 6+ years of experience building scalable web applications and enterprise platforms using React.js, Next.js, TypeScript, JavaScript, Node.js, Express.js, Python, PostgreSQL, and REST/GraphQL APIs. Experienced in frontend architecture, backend services, real-time applications, network automation, API security, database design, testing, and cloud-native deployments. Proven ability to improve application performance, build reliable enterprise solutions, and collaborate with cross-functional teams in Agile environments.`;
 
 export const skillSections = [
   {
-    title: "Frontend Technologies",
+    title: "Frontend",
     bullets: [
-      "Core Frontend: React, Next.js, TypeScript, JavaScript (ES6+).",
-      "State Management: Redux Saga.",
-      "Styling & UI Libraries: Tailwind CSS, Material UI, Styled Components.",
-      "Component Development: Storybook.",
-      "Performance Optimization: Code Splitting, Lazy Loading, React Suspense, Server Components.",
-      "Testing & Debugging: Jest, React Testing Library, Cypress, Enzyme, Mocha.",
-      "Build Tools & Tooling: NPM, Vite, Babel, ESLint, Prettier.",
-      "Mobile & Cross-Platform: React Native.",
+      "React.js, Next.js, TypeScript, JavaScript (ES6+), React Native, HTML5, CSS3",
     ],
   },
   {
-    title: "Development & Best Practices",
+    title: "UI & State",
     bullets: [
-      "Backend Technologies: Node.js, Express.js, MongoDB, REST APIs, GraphQL, PostgreSQL, SQL, Python, Java, C#, ASP.NET.",
-      "Cloud and infrastructure: Google Kubernetes Engine (GKE), AWS, Docker, Kubernetes, Micro-Frontends.",
-      "Testing & Debugging: Jest, Cypress, TDD (Test-Driven Development).",
-      "Version Control & CI/CD: Git, GitHub, CI/CD Pipelines.",
-      "Design Systems & Documentation: Storybook, Swagger JS.",
-      "Agile Development: Scrum, Jira, Confluence.",
+      "Redux-Saga, Tailwind CSS, Material UI, Styled Components, Storybook, React Flow",
+    ],
+  },
+  {
+    title: "Backend",
+    bullets: [
+      "Node.js, Express.js, Python, Flask, Java, C#, ASP.NET, REST APIs, GraphQL, WebSockets",
+    ],
+  },
+  {
+    title: "Databases",
+    bullets: ["PostgreSQL, MySQL, MongoDB, SQL"],
+  },
+  {
+    title: "Testing",
+    bullets: ["Jest, React Testing Library, Cypress, Enzyme, Mocha, TDD"],
+  },
+  {
+    title: "Cloud & DevOps",
+    bullets: [
+      "AWS, Google Kubernetes Engine (GKE), Docker, Kubernetes, CI/CD, Git, GitHub",
+    ],
+  },
+  {
+    title: "Networking & Automation",
+    bullets: ["SSH, Telnet, SNMP, Paramiko, Netmiko"],
+  },
+  {
+    title: "Tools & Practices",
+    bullets: [
+      "Vite, Webpack, Babel, ESLint, Prettier, Swagger/OpenAPI, Jira, Confluence, Scrum/Agile",
     ],
   },
 ];
@@ -47,18 +69,18 @@ export const experience = [
   {
     company: "TCP Network Services",
     title: "Programmer",
-    dates: "May 2025 – Present",
+    dates: "May 2025 – May 2026",
     context:
-      "TCP Automation Platform — network device management and automation for configuration backups, command execution, and topology visualization. Tech stack: Python (Flask), React, PostgreSQL, Tailwind CSS, WebSockets, Paramiko, Netmiko, SSH/Telnet.",
+      "TCP Automation Platform — Python (Flask), React, PostgreSQL, Tailwind CSS, WebSockets, Paramiko, Netmiko",
     highlights: [
-      "Architected a modular Flask Blueprint-based REST API with real-time WebSocket communication, enabling live progress tracking for 300+ concurrent device operations and reducing backup execution time through intelligent thread pooling.",
-      "Designed a responsive React frontend with dynamic network topology visualization using React Flow and Dagre, with interactive device discovery, mapping, and topology snapshots with drag-and-drop editing.",
-      "Implemented multi-protocol device connectivity (SSH/Telnet/SNMP) with automatic fallback mechanisms, supporting 300+ network device types from multiple vendors via Paramiko and Netmiko.",
-      "Built a command execution engine with parallel multi-device orchestration, real-time execution tracking, and Excel/ZIP export, supporting 50+ concurrent worker threads.",
-      "Engineered JWT + Active Directory/LDAP authentication with role-based access control (user/admin/dbadmin), rate limiting, and audit trail logging for enterprise security compliance.",
+      "Architected modular Flask Blueprint-based REST APIs with WebSocket communication for live progress tracking across 300+ concurrent device operations, using intelligent thread pooling to improve backup execution.",
+      "Designed a responsive React frontend with React Flow and Dagre for interactive device discovery, network topology mapping, topology snapshots, and drag-and-drop editing.",
+      "Implemented multi-protocol device connectivity across SSH, Telnet, and SNMP with automatic fallback, supporting 300+ device types from multiple vendors using Paramiko and Netmiko.",
+      "Built a parallel command-execution engine with real-time tracking and Excel/ZIP export, supporting 50+ concurrent worker threads.",
+      "Engineered JWT and Active Directory/LDAP authentication with role-based access control, rate limiting, and audit logging for enterprise security.",
       "Developed PostgreSQL database abstraction with connection pooling, transaction management, and schema migrations for high-concurrency workloads.",
-      "Created automated Excel report generation with conditional formatting and color-coded status (PASS/FAIL/PARTIAL_PASS) for device compliance visibility.",
-      "Implemented alerting and notification aggregation, support ticket creation with MFA, and email integration for incident response.",
+      "Automated Excel compliance reporting with conditional formatting and PASS/FAIL/PARTIAL_PASS status indicators.",
+      "Implemented alert aggregation, support-ticket creation with MFA, and email integration for incident response workflows.",
     ],
   },
   {
@@ -68,31 +90,27 @@ export const experience = [
     roles: [
       {
         summary:
-          "Digital Dashboard for Nokia — frontend architecture and UX. Tech stack: React, TypeScript, JavaScript, Jest, Tailwind CSS.",
+          "Digital Dashboard for Nokia — React, TypeScript, JavaScript, Jest, Tailwind CSS",
         highlights: [
-          "Boosted customer engagement and conversions through curated onboarding and A/B testing.",
-          "Strengthened code quality and security; reduced vulnerabilities and improved consistency.",
-          "Maintained and updated code libraries for security and features.",
-          "Mentored interns and junior developers.",
+          "Developed and enhanced responsive dashboard experiences, including curated onboarding and A/B testing to improve customer engagement.",
+          "Strengthened frontend code quality and security through library maintenance, dependency updates, and consistent development practices.",
+          "Mentored interns and junior developers through code reviews, technical guidance, and frontend best practices.",
         ],
       },
       {
-        summary: "Enhanced Bekaert’s e-commerce platform. Tech stack: React, TypeScript, Jest, Enzyme.",
+        summary: "Bekaert E-commerce Platform — React, TypeScript, Jest, Enzyme",
         highlights: [
-          "Improved code consistency and maintainability across the platform.",
-          "Maintained and updated code libraries.",
+          "Improved component consistency and maintainability across the e-commerce frontend through reusable React patterns and testing practices.",
+          "Maintained and updated frontend libraries to support security, stability, and new product requirements.",
         ],
       },
       {
         summary:
-          "Led migration for MSC Direct’s e-commerce system (PHP to React). Tech stack: React, Node.js, Express.js, C#, ASP.NET, MySQL, GraphQL, REST APIs.",
+          "MSC Direct E-commerce Migration — React, Node.js, Express.js, MySQL, GraphQL, REST APIs, Tailwind CSS",
         highlights: [
-          "Delivered a dynamic UI with React’s component-based architecture.",
-          "Styled the frontend with Tailwind CSS for responsiveness and modern design.",
-          "Built Node.js and Express.js backend, optimizing server-side performance.",
-          "Designed GraphQL and RESTful APIs for product search, order management, and shipment tracking.",
-          "Documented APIs with Swagger.js.",
-          "Strengthened testing with Jest (unit) and Cypress (E2E).",
+          "Led migration of an e-commerce system from PHP to React, delivering reusable component-based interfaces and responsive user experiences.",
+          "Built Node.js and Express.js backend services and designed GraphQL/REST APIs for product search, order management, and shipment tracking.",
+          "Documented APIs with Swagger.js and strengthened quality using Jest unit tests and Cypress end-to-end testing.",
         ],
       },
     ],
@@ -104,21 +122,20 @@ export const experience = [
     roles: [
       {
         summary:
-          "Internal digital dashboard for company portal. Tech stack: Next.js, React, Tailwind CSS, Node.js, Express.js, GraphQL, RESTful APIs, Swagger.js, Jest, Cypress.",
+          "Internal Digital Dashboard — Next.js, React, Tailwind CSS, Node.js, Express.js, GraphQL, REST APIs, Swagger.js, Jest, Cypress",
         highlights: [
-          "Developed a responsive web app with React and Python, improving customer satisfaction by 25%.",
-          "Enhanced unit tests with Jest and Enzyme, reducing post-deployment bugs by 40%.",
-          "Maintained and updated code libraries for efficiency.",
-          "Optimized GraphQL queries, improving data efficiency by 40% and cutting load times by 15%.",
+          "Developed responsive web applications using React and Python, contributing to a 25% improvement in customer satisfaction.",
+          "Enhanced Jest and Enzyme test coverage and practices, contributing to a 40% reduction in post-deployment bugs.",
+          "Optimized GraphQL queries, improving data efficiency by 40% and reducing load times by 15%.",
         ],
       },
       {
         summary:
-          "Rate Entry System for CITI. Tech stack: React, TypeScript, C#, ASP.NET, Python, Java.",
+          "CITI Rate Entry System — React, TypeScript, C#, ASP.NET, Python, Java, Webpack, Three.js",
         highlights: [
-          "Optimized assets with Webpack, improving load times by 20%.",
-          "Developed 3D visualizations with Three.js in React applications.",
-          "Collaborated with 5+ product managers and UX designers in Agile for 3 major React projects.",
+          "Optimized frontend assets with Webpack, improving application load times by 20%.",
+          "Developed 3D visualizations using Three.js within React applications.",
+          "Collaborated with 5+ product managers and UX designers across 3 major React projects in Agile teams.",
           "Conducted 20+ code reviews and mentored 5 junior developers in React, TypeScript, and Python.",
         ],
       },
@@ -126,11 +143,13 @@ export const experience = [
   },
   {
     company: "Nuvo Horizons",
-    title: "Freelancing",
+    title: "Freelance Developer",
     dates: "August 2024 – December 2024",
+    context:
+      "Student College & Program Platform — React.js, Java, Kotlin, REST APIs, AWS, PostgreSQL, MongoDB",
     highlights: [
-      "Built a platform for students to explore colleges and programs, view admission requirements, and apply — React.js, Java, Kotlin, REST APIs.",
-      "Used AWS, PostgreSQL, and MongoDB for cloud infrastructure and data, supporting registration and applications.",
+      "Built a platform enabling students to explore colleges and programs, review admission requirements, and submit applications.",
+      "Used AWS, PostgreSQL, and MongoDB to support cloud infrastructure, registration workflows, and application data.",
     ],
   },
 ];
@@ -182,18 +201,16 @@ export function buildResumePlainText() {
     "PROFESSIONAL SUMMARY",
     summary,
     "",
-    "TECHNICAL SKILLS & EXPERTISE",
+    "TECHNICAL SKILLS",
     "",
   ];
   for (const sec of skillSections) {
-    parts.push(sec.title.toUpperCase());
-    for (const b of sec.bullets) parts.push(`• ${b}`);
-    parts.push("");
+    parts.push(`${sec.title}: ${sec.bullets.join("; ")}`);
   }
-  parts.push("PROFESSIONAL EXPERIENCE", "", flattenExperienceForText());
+  parts.push("", "PROFESSIONAL EXPERIENCE", "", flattenExperienceForText());
   parts.push("EDUCATION", "");
   for (const e of education) {
-    parts.push(`${e.degree} — ${e.school}, ${e.location} (${e.year})`);
+    parts.push(`${e.degree} — ${e.school}, ${e.location} | ${e.year}`);
   }
   return parts.join("\n");
 }

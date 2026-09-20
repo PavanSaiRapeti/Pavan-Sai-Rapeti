@@ -38,6 +38,13 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'lede';
+  src: url('/fonts/Logo1.otf') format('opentype');
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
     --float-heightX: -10px;
     --float-heightY: -10px; /* Default float height */
@@ -926,12 +933,13 @@ body[data-mobile-landscape="1"] .realm-visit-hud__count {
 }
 
 .realm-hero-copy__im {
-  font-family: special, cursive;
-  font-size: clamp(0.95rem, 2vw, 1.2rem);
-  font-weight: 400;
-  letter-spacing: 0.12em;
-  text-transform: lowercase;
-  color: #6b5a40;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+  font-size: clamp(0.95rem, 2vw, 1.15rem);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: #5c5348;
 }
 
 .realm-hero-copy__role-slot {
@@ -975,20 +983,41 @@ body[data-mobile-landscape="1"] .realm-visit-hud__count {
 
 .realm-hero-copy__lede {
   margin: 0;
-  font-family: special, cursive;
-  font-size: clamp(0.86rem, 1.55vw, 1.05rem);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+  font-size: clamp(0.95rem, 1.7vw, 1.125rem);
+  font-weight: 400;
+  letter-spacing: 0.01em;
   line-height: 1.55;
-  color: #4a4032;
-  max-width: 32rem;
+  color: #3d372f;
+  max-width: 34rem;
 }
 
 .realm-hero-copy__eyebrow {
-  margin: 0.35rem 0 0;
-  font-family: special, cursive;
-  font-size: clamp(0.68rem, 1.3vw, 0.82rem);
-  letter-spacing: 0.14em;
-  text-transform: lowercase;
-  color: #8a7355;
+  margin: 0.65rem 0 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+  font-size: clamp(0.9rem, 1.55vw, 1.05rem);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: #2a6b3f;
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+.realm-hero-copy__eyebrow::before {
+  content: "";
+  display: inline-block;
+  width: 0.55em;
+  height: 0.55em;
+  margin-right: 0.45em;
+  border-radius: 50%;
+  background: #2f9e5a;
+  box-shadow: 0 0 0 3px rgba(47, 158, 90, 0.25);
+  vertical-align: 0.05em;
 }
 
 body[data-mobile-landscape="1"] .realm-hero-copy {
@@ -1015,13 +1044,16 @@ body[data-mobile-landscape="1"] .realm-hero-copy__role {
 }
 
 body[data-mobile-landscape="1"] .realm-hero-copy__lede {
-  font-size: 0.72rem;
-  max-width: 34rem;
-  line-height: 1.4;
+  font-size: clamp(0.8rem, 2.2vw, 0.95rem);
+  max-width: 36rem;
+  line-height: 1.45;
+  font-weight: 500;
 }
 
 body[data-mobile-landscape="1"] .realm-hero-copy__eyebrow {
-  font-size: 0.62rem;
+  font-size: clamp(0.82rem, 2vw, 0.95rem);
+  letter-spacing: 0.01em;
+  padding: 0;
 }
 
 /* Skills — bottom-right dock (legacy; menu moved to top-right game accordion) */
@@ -1125,6 +1157,52 @@ body[data-mobile-landscape="1"] .realm-hero-copy__eyebrow {
   box-shadow: 2px 2px 0 rgba(249, 110, 42, 0.4);
   z-index: 2;
   line-height: 1;
+}
+
+.realm-fullscreen-btn {
+  position: fixed;
+  right: max(0.85rem, env(safe-area-inset-right));
+  bottom: max(0.85rem, env(safe-area-inset-bottom));
+  z-index: 10070;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  color: #1a160f;
+  background: #fffef6;
+  border: 2px solid #1e1e24;
+  box-shadow: 2px 2px 0 rgba(30, 30, 36, 0.28);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.realm-fullscreen-btn:hover {
+  background: #f96e2a;
+  color: #fff;
+}
+
+.realm-fullscreen-btn--active {
+  background: #1e1e24;
+  color: #fffef6;
+}
+
+.realm-fullscreen-btn--active:hover {
+  background: #333;
+  color: #fff;
+}
+
+.realm-fullscreen-btn__icon {
+  display: block;
+  pointer-events: none;
+}
+
+body[data-mobile-landscape="1"] .realm-fullscreen-btn {
+  right: max(0.65rem, env(safe-area-inset-right));
+  bottom: max(0.65rem, env(safe-area-inset-bottom));
+  width: 2.5rem;
+  height: 2.5rem;
 }
 
 .realm-visit-chip__label {

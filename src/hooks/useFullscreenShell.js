@@ -1,8 +1,7 @@
 import { useEffect } from "react";
 
 /**
- * Lock the app to the visual viewport and collapse mobile browser chrome
- * where the platform allows (Fullscreen API + visualViewport height).
+ * Lock layout to the visual viewport. Fullscreen is only via the HUD button.
  */
 export default function useFullscreenShell() {
   useEffect(() => {
@@ -15,7 +14,6 @@ export default function useFullscreenShell() {
       const vv = window.visualViewport;
       const h = Math.round(vv?.height || window.innerHeight);
       root.style.setProperty("--app-height", `${h}px`);
-      // Nudge Safari to collapse the URL bar when possible
       if (window.scrollY === 0 && h < window.outerHeight) {
         window.scrollTo(0, 1);
       }
@@ -26,29 +24,6 @@ export default function useFullscreenShell() {
     window.visualViewport?.addEventListener("resize", setAppHeight);
     window.visualViewport?.addEventListener("scroll", setAppHeight);
 
-    const tryFullscreen = () => {
-      const target = document.getElementById("__next") || body;
-      if (!target || document.fullscreenElement) return;
-      const req =
-        target.requestFullscreen ||
-        target.webkitRequestFullscreen ||
-        target.msRequestFullscreen;
-      if (typeof req === "function") {
-        Promise.resolve(req.call(target)).catch(() => {
-          /* user denied / unsupported — still using dvh shell */
-        });
-      }
-    };
-
-    // Fullscreen requires a gesture; first tap/pointer enters immersive mode on Android
-    const onFirstGesture = () => {
-      tryFullscreen();
-      window.removeEventListener("pointerdown", onFirstGesture);
-      window.removeEventListener("touchend", onFirstGesture);
-    };
-    window.addEventListener("pointerdown", onFirstGesture, { passive: true });
-    window.addEventListener("touchend", onFirstGesture, { passive: true });
-
     root.classList.add("app-fullscreen");
     body.classList.add("app-fullscreen");
 
@@ -56,10 +31,44 @@ export default function useFullscreenShell() {
       window.removeEventListener("resize", setAppHeight);
       window.visualViewport?.removeEventListener("resize", setAppHeight);
       window.visualViewport?.removeEventListener("scroll", setAppHeight);
-      window.removeEventListener("pointerdown", onFirstGesture);
-      window.removeEventListener("touchend", onFirstGesture);
       root.classList.remove("app-fullscreen");
       body.classList.remove("app-fullscreen");
     };
   }, []);
+}
+
+export function getFullscreenElement() {
+  if (typeof document === "undefined") return null;
+  return (
+    document.fullscreenElement ||
+    document.webkitFullscreenElement ||
+    document.msFullscreenElement ||
+    null
+  );
+}
+
+export function toggleDocumentFullscreen() {
+  if (typeof document === "undefined") return Promise.resolve(false);
+  const active = getFullscreenElement();
+  if (active) {
+    const exit =
+      document.exitFullscreen ||
+      document.webkitExitFullscreen ||
+      document.msExitFullscreen;
+    if (typeof exit === "function") {
+      return Promise.resolve(exit.call(document))
+        .then(() => false)
+        .catch(() => false);
+    }
+    return Promise.resolve(false);
+  }
+  const target = document.documentElement;
+  const req =
+    target.requestFullscreen ||
+    target.webkitRequestFullscreen ||
+    target.msRequestFullscreen;
+  if (typeof req !== "function") return Promise.resolve(false);
+  return Promise.resolve(req.call(target))
+    .then(() => true)
+    .catch(() => false);
 }
