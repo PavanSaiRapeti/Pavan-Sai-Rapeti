@@ -76,8 +76,8 @@
   },
   "flyGuide": {
     "speech": {
-      "resumeStack": "Those papers are my résumé — click them (or the label) to open the full PDF in a window.",
-      "resumeLabel": "Résumé shortcut — same as the stack: opens my CV.",
+      "resumeStack": "Those papers are my résumé — click them (or the label) to open it, download a text file for ATS, or save as PDF.",
+      "resumeLabel": "Résumé shortcut — same as the stack: opens my résumé viewer.",
       "hobbies": "My off-hours corkboard — hover a card to hear what each hobby means to me.",
       "hobbyFootball": "Football — pickup games, late goals, and that post-match buzz.",
       "hobbyTrekking": "Trekking and hiking — trails, altitude, and quiet views worth the climb.",
@@ -207,7 +207,6 @@
     "resumeLabel": "Resume",
     "resumeModalTitle": "My Resume",
     "resumeCloseButton": "Close",
-    "resumeUrl": "/resume.pdf",
     "hobbiesLabel": "Hobbies",
     "hobbiesNote": "off the clock",
     "hobbies": [
