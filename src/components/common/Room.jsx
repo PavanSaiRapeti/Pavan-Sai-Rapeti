@@ -308,15 +308,6 @@ const Room = ({
         hideNarrationSoon={hideNarrationSoon}
         clearNarrationTimer={clearNarrationTimer}
       />
-      <DeskMailbox
-        position={[2.2, -0.5, 1.85]}
-        onClick={() => onMailboxClick?.()}
-        onPointerEnter={() => {
-          clearNarrationTimer();
-          showNarration("mailbox");
-        }}
-        onPointerOut={hideNarrationSoon}
-      />
       <mesh
         receiveShadow
         position={[0, -0.55, 0]}
@@ -364,6 +355,15 @@ const Room = ({
         onExperienceSelect?.(station);
       }}
       selectedStationId={selectedStationId}
+    />
+    {/* Mailbox faces the screen — not planted on the desk floor */}
+    <DeskMailbox
+      onClick={() => onMailboxClick?.()}
+      onPointerEnter={() => {
+        clearNarrationTimer();
+        showNarration("mailbox");
+      }}
+      onPointerOut={hideNarrationSoon}
     />
     {/* Dino sits on the farther desk floor */}
     <group position={[0, 0, DESK_WORLD_Z]}>

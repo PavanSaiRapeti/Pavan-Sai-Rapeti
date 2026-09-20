@@ -1,7 +1,7 @@
 import {
   getSupabaseAdmin,
   isSupabaseConfigured,
-} from "../../src/lib/supabaseServer";
+} from "../../lib/supabaseServer";
 
 async function readCount(admin) {
   const { data, error } = await admin
@@ -34,16 +34,13 @@ export default async function handler(req, res) {
       return res.status(200).json({ count });
     }
 
-    // Atomic-ish increment: read → write. Fine for portfolio traffic.
     const current = await readCount(admin);
     const next = current + 1;
-    const { error } = await admin
-      .from("site_stats")
-      .upsert({
-        id: "main",
-        visit_count: next,
-        updated_at: new Date().toISOString(),
-      });
+    const { error } = await admin.from("site_stats").upsert({
+      id: "main",
+      visit_count: next,
+      updated_at: new Date().toISOString(),
+    });
     if (error) throw error;
     return res.status(200).json({ count: next });
   } catch (err) {

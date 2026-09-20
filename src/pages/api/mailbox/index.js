@@ -1,7 +1,7 @@
 import {
   getSupabaseAdmin,
   isSupabaseConfigured,
-} from "../../../src/lib/supabaseServer";
+} from "../../../lib/supabaseServer";
 
 const MAX_NAME = 80;
 const MAX_EMAIL = 120;

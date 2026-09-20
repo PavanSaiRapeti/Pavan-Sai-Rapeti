@@ -1,7 +1,7 @@
 import {
   getSupabaseAdmin,
   isSupabaseConfigured,
-} from "../../../src/lib/supabaseServer";
+} from "../../../lib/supabaseServer";
 
 const SARCASTIC = [
   "Cute. It's not yours — don't try.",
